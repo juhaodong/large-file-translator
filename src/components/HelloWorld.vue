@@ -33,7 +33,7 @@
 
       <div style="width: 100%" class="pa-8">
         <div class="text-h1 mb-8">
-          翻译大王
+          翻译大王👑
         </div>
         <div class="text-h4 mb-8">
           好用又便宜（免费试用版）
@@ -50,7 +50,7 @@
         <v-btn size="large" v-else color="primary" @click="processPDF" :loading="isProcessing">
           翻译并预览 PDF
         </v-btn>
-        <v-btn class="ml-1" size="large" color="primary" @click="generatePdf">
+        <v-btn class="ml-1" :disabled="isProcessing" size="large" color="primary" @click="generatePdf">
           下载PDF
         </v-btn>
       </div>
@@ -70,7 +70,7 @@ const isProcessing = ref(false); // 控制是否显示进度条
 const progress = ref(0); // 进度值 (0-100)
 const apiKey = ref(localStorage.getItem('apiKey') ?? '')
 const file = ref(null)            // 原始PDF文件
-const check = ref(true)
+const check = ref(false)
 const remainTime = ref("-")
 const pdfDoc = ref(null)
 
