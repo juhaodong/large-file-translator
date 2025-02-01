@@ -2,10 +2,11 @@ import OpenAI from "openai";
 
 // 初始化 OpenAI 配置
 const apiKey = ""; // 替换为您的 OpenAI API 密钥
-const openai = new OpenAI({apiKey, dangerouslyAllowBrowser: true});
 
-export async function doTranslation(str) {
+
+export async function doTranslation(str, apiKey) {
   try {
+    const openai = new OpenAI({apiKey,dangerouslyAllowBrowser:true});
     // 调用 OpenAI 翻译 API
     const completion = await openai.chat.completions.create({
       messages: [{

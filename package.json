@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@mdi/font": "7.4.47",
+    "html2pdf.js": "^0.10.2",
+    "jspdf": "^2.5.2",
     "openai": "^4.82.0",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^4.10.38",
