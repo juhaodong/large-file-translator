@@ -19,10 +19,10 @@
               style="min-height: 100%;width: 100%"
             >
               <div
-                v-for="p in displayParagraph" class="mt-8" :style="{fontSize: p.fontSize*1.2 + 'pt'}"
+                v-for="p in displayParagraph" class="mt-8" :style="{fontSize: p.fontSize + 'px'}"
                 style="width: 100%"
               >
-                <div :style="{fontSize:p.fontSize+'pt'}">{{ p.content }}</div>
+                <div :style="{fontSize:p.fontSize*0.8+'px'}">{{ p.content }}</div>
                 <v-progress-linear indeterminate v-if="p.translating" style="width: 100%"></v-progress-linear>
                 <div>{{ p.translate }}</div>
               </div>
@@ -40,18 +40,18 @@
           好用又便宜（免费试用版）
         </div>
         <v-text-field :disabled="isProcessing" v-model="apiKey" label="输入你的api key"></v-text-field>
-        <v-file-input
+        <v-file-upload
           :disabled="isProcessing" prepend-icon="" append-inner-icon="mdi-file" v-model="file" label="选择 PDF 文件"
-        ></v-file-input>
+        ></v-file-upload>
         <v-checkbox v-model="check" :disabled="isProcessing" label="测试模式(只翻译前10个段落)"></v-checkbox>
         <template v-if="isProcessing">
           <v-progress-circular indeterminate></v-progress-circular>
           {{ progress }}%/100% 预计剩余时间:{{ remainTime }}
         </template>
-        <v-btn size="large" v-else color="primary" @click="processPDF" :loading="isProcessing">
+        <v-btn size="large" v-else color="green" @click="processPDF" :loading="isProcessing">
           翻译并预览 PDF
         </v-btn>
-        <v-btn class="ml-1" :disabled="isProcessing" size="large" color="primary" @click="generatePdf">
+        <v-btn class="ml-1" v-if="pdfReady" :disabled="isProcessing" size="large" color="black" @click="generatePdf">
           下载PDF
         </v-btn>
       </div>
@@ -74,22 +74,18 @@ const file = ref(null)            // 原始PDF文件
 const check = ref(false)
 const remainTime = ref("-")
 const pdfDoc = ref(null)
+const pdfReady = ref(false)
 
 watch(apiKey, (newVal, oldVal) => {
   localStorage.setItem('apiKey', newVal)
 })
+watch(file, (newVal, oldVal) => {
+  console.log(file.value)
+  pdfReady.value = false
+  showTextInPdf()
+})
 
-// 提取 PDF 文字并调用翻译函数
-async function processPDF() {
-  isProcessing.value = true;
-  progress.value = 0;
-
-  // 确保用户上传了 PDF 文件
-  if (!file.value) {
-    alert('请上传一个 PDF 文件')
-    isProcessing.value = false
-    return
-  }
+async function showTextInPdf() {
   displayParagraph.length = 0
 
   // 使用 pdf.js 加载 PDF 文档
@@ -110,65 +106,74 @@ async function processPDF() {
   }
   const paragraph = await generateParagraph(allTexts, (await doc.getPage(1)).getViewport({scale: 1}))
   displayParagraph.push(...paragraph)
+}
+
+// 提取 PDF 文字并调用翻译函数
+async function processPDF() {
+  isProcessing.value = true;
+  progress.value = 0;
+
+  // 确保用户上传了 PDF 文件
+  if (!file.value) {
+    alert('请上传一个 PDF 文件')
+    isProcessing.value = false
+    return
+  }
+
 // 动态估算剩余时间
-  const BATCH_SIZE = 200; // 每批并发的任务数
+  const BATCH_SIZE = 200; // 每批并发任务数
+  let processedCount = 0; // 已完成的请求计数
+  let totalElapsedTime = 0; // 累计已完成请求的耗时
 
   for (let batchStart = 0; batchStart < displayParagraph.length; batchStart += BATCH_SIZE) {
     const batchEnd = Math.min(batchStart + BATCH_SIZE, displayParagraph.length);
     const batch = displayParagraph.slice(batchStart, batchEnd);
 
-    const startTime = performance.now(); // 批次起始时间
-
-    // 使用 `Promise.allSettled` 并发执行翻译
-    const results = await Promise.allSettled(
+    // 批量并发任务
+    await Promise.allSettled(
       batch.map(async (p, index) => {
-        if (!check.value || batchStart + index < 10) {
+        const overallIndex = batchStart + index; // 全局段落索引
+        if (!check.value || overallIndex < 10) {
           p.translating = true;
+
+          // 记录单个请求的开始时间
+          const startTime = performance.now();
           try {
-            return await doTranslation(p.content, apiKey.value);
+            p.translate = await doTranslation(p.content, apiKey.value);
           } catch (error) {
             console.error(`段落翻译失败：${error}`);
-            return "翻译失败"; // 如果翻译失败，返回默认值
+            p.translate = "翻译失败";
           } finally {
             p.translating = false;
+
+            // 更新已处理的段落计数和累计耗时
+            const elapsedTime = performance.now() - startTime;
+            totalElapsedTime += elapsedTime; // 累计耗时
+            processedCount++; // 增量已处理计数
           }
+
+          // 动态更新剩余时间和进度
+          const averageTimePerRequest = totalElapsedTime / processedCount; // 平均单个请求耗时
+          const remainingRequests = displayParagraph.length - processedCount; // 剩余段落数
+          const remainingTimeMs = averageTimePerRequest * remainingRequests; // 剩余总时间（毫秒）
+
+          const remainingMinutes = Math.floor(remainingTimeMs / 60000);
+          const remainingSeconds = Math.floor((remainingTimeMs % 60000) / 1000);
+
+          progress.value = Math.round((processedCount / displayParagraph.length) * 100); // 更新进度
+          remainTime.value = `${remainingMinutes} 分 ${remainingSeconds} 秒`; // 更新剩余时间
         }
       })
     );
 
-    // 根据结果更新每个段落的翻译内容
-    results.forEach((result, index) => {
-      if (result.status === "fulfilled") {
-        batch[index].translate = result.value; // 翻译成功的段落
-      } else {
-        batch[index].translate = "翻译失败"; // 翻译失败的段落
-      }
-    });
-
-    // 批次完成后计算耗时
-    const elapsedTime = performance.now() - startTime; // 单批耗时（毫秒）
-    const remainingBatches = Math.ceil((displayParagraph.length - batchEnd) / BATCH_SIZE);
-    const remainingTimeMs = elapsedTime * remainingBatches;
-
-    // 将耗时转换为分钟和秒
-    const remainingMinutes = Math.floor(remainingTimeMs / 60000);
-    const remainingSeconds = Math.floor((remainingTimeMs % 60000) / 1000);
-
-    // 更新进度和剩余时间
-    progress.value = Math.round((batchEnd / displayParagraph.length) * 100);
-    remainTime.value = `${remainingMinutes} 分 ${remainingSeconds} 秒`;
-
     console.log(`批次 ${batchStart / BATCH_SIZE + 1} 完成，总进度：${progress.value}%`);
   }
-
-
-  // 翻译完成后隐藏进度条并更新显示内容
-  displayParagraph.value = paragraph;
+  pdfReady.value = true
   isProcessing.value = false;
 }
 
 function generatePdf() {
-  html2pdf(pdfDoc.value, {margin: 4, html2canvas: {scale: 4}, pagebreak: {mode: ['avoid-all', 'css', 'legacy']}});
+  html2pdf(pdfDoc.value, {margin: 4, html2canvas: {scale: 2}, pagebreak: {mode: ['avoid-all', 'css', 'legacy']}});
 }
 
 async function generateParagraph(allTextContent, viewport) {
