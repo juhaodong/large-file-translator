@@ -63,7 +63,8 @@
 import {ref, watch} from 'vue'
 import {getDocument,} from 'pdfjs-dist'
 import {doTranslation} from "@/translation.js";
-import html2pdf from "html2pdf.js";
+import jsPDF from "jspdf";
+import '@/font.js'
 
 const displayParagraph = reactive([]);
 // 新增变量：用于进度条显示
@@ -75,6 +76,7 @@ const check = ref(false)
 const remainTime = ref("-")
 const pdfDoc = ref(null)
 const pdfReady = ref(false)
+const docName = ref('')
 
 watch(apiKey, (newVal, oldVal) => {
   localStorage.setItem('apiKey', newVal)
@@ -93,7 +95,7 @@ async function showTextInPdf() {
   const doc = await getDocument(url).promise  // 加载 PDF 文档
   const allTexts = []                           // 存储所有页面的文字信息
   const pageCount = doc.numPages              // 获取 PDF 页数
-
+  docName.value = file.value.name
   // 提取所有页面的内容
   for (let i = 1; i <= pageCount; i++) {
     const page = await doc.getPage(i)         // 加载对应页面
@@ -173,7 +175,62 @@ async function processPDF() {
 }
 
 function generatePdf() {
-  html2pdf(pdfDoc.value, {margin: 4, html2canvas: {scale: 2}, pagebreak: {mode: ['avoid-all', 'css', 'legacy']}});
+  const doc = new jsPDF()
+  doc.setFont('han')
+  let cursorY = 10;
+  cursorY = addWrappedText({
+    doc,
+    text: "本文由翻译大王翻译，翻译就用翻译大王！！ Developed by Haodong Ju",
+    fontSize: 14,
+    initialYPosition: cursorY,
+  })
+  cursorY += 10
+  for (let i = 0; i < displayParagraph.length; i++) {
+    const p = displayParagraph[i]
+    const baseFontSize = p.fontSize * 0.8
+    cursorY = addWrappedText({
+      doc,
+      text: p.content,
+      fontSize: baseFontSize * 0.8,
+      initialYPosition: cursorY,
+    })
+    if (p.translate) {
+      cursorY = addWrappedText({
+        doc,
+        text: p.translate,
+        fontSize: baseFontSize,
+        initialYPosition: cursorY,
+      })
+    }
+
+    cursorY += 20
+  }
+  doc.save((docName.value ?? performance.now()) + '.pdf')
+}
+
+function addWrappedText({
+                          text,
+                          doc,
+                          fontSize = 10,
+
+                          xPosition = 10,
+                          initialYPosition = 10,
+                          pageWrapInitialYPosition = 10
+                        }) {
+  doc.setFontSize(fontSize);
+  const textLines = doc.splitTextToSize(text, doc.internal.pageSize.width - 20); // Split the text into lines
+  const pageHeight = doc.internal.pageSize.height - 20;        // Get page height, we'll use this for auto-paging. TRANSLATE this line if using units other than `pt`
+  let cursorY = initialYPosition;
+  const lineSpacing = fontSize * 0.6;
+  textLines.forEach(lineText => {
+    if (cursorY > pageHeight) { // Auto-paging
+      doc.addPage();
+      cursorY = pageWrapInitialYPosition;
+    }
+    doc.text(xPosition, cursorY, lineText);
+    cursorY += lineSpacing;
+  })
+  return cursorY
 }
 
 async function generateParagraph(allTextContent, viewport) {
@@ -184,7 +241,7 @@ async function generateParagraph(allTextContent, viewport) {
   let lastLineHeight = null
   allTextContent.forEach((item) => {
     // 每个文本块信息
-    if (item.str.trim() === '') return
+    if (item.str.trim().length < 3) return
     const formattedItem = {
       content: item.str, // 文本内容
       x: item.transform[4], // X 坐标
