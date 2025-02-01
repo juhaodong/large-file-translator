@@ -37,7 +37,7 @@
           翻译大王👑
         </div>
         <div class="text-h4 mb-8">
-          好用又便宜（免费试用版）
+          不限制大小，页数，好用又便宜（免费试用版）,目前只能翻译非扫描版PDF
         </div>
         <v-text-field :disabled="isProcessing" v-model="apiKey" label="输入你的api key"></v-text-field>
         <v-file-upload
@@ -118,6 +118,11 @@ async function processPDF() {
   // 确保用户上传了 PDF 文件
   if (!file.value) {
     alert('请上传一个 PDF 文件')
+    isProcessing.value = false
+    return
+  }
+  if (!apiKey.value) {
+    alert("你没输入Api Key 啊")
     isProcessing.value = false
     return
   }
