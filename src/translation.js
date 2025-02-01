@@ -11,13 +11,14 @@ export async function doTranslation(str, apiKey) {
     const completion = await openai.chat.completions.create({
       messages: [{
         role: "system",
-        content: "你是一个专业的翻译助手，需要将用户提供的内容精准翻译成中文。翻译时请确保语言流畅、准确且专业，保留原文的完整意义。对于学术性内容，请使用正式、严谨的表达方式；对于通俗内容，保持简洁易懂。只需返回翻译后的纯文本内容，无需包含任何多余说明、注释或格式修饰。所有翻译结果必须符合中文语法和表达习惯。"
+        content: "你是一个专业的翻译助手，需要将用户提供的内容精准翻译成中文。翻译时请确保语言流畅、准确且专业，保留原文的完整意义。对于学术性内容，请使用正式、严谨的表达方式；对于通俗内容，保持简洁易懂。" +
+          "只需返回翻译后的纯文本内容，无需包含任何多余说明、注释或格式修饰。所有翻译结果必须符合中文语法和表达习惯。如果实在翻译不出来，就显示原文字。"
       }, {
         role: "user",
         content: str
       }],
 
-      model: "gpt-4o",
+      model: "gpt-4o-mini",
       store: true,
     });
 

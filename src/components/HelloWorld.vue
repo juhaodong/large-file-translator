@@ -19,9 +19,10 @@
               style="min-height: 100%;width: 100%"
             >
               <div
-                v-for="p in displayParagraph" class="mt-8" :style="{fontSize: p.fontSize*1.2 + 'px'}" style="width: 100%"
+                v-for="p in displayParagraph" class="mt-8" :style="{fontSize: p.fontSize*1.2 + 'pt'}"
+                style="width: 100%"
               >
-                <div :style="{fontSize:p.fontSize+'px'}">{{ p.content }}</div>
+                <div :style="{fontSize:p.fontSize+'pt'}">{{ p.content }}</div>
                 <v-progress-linear indeterminate v-if="p.translating" style="width: 100%"></v-progress-linear>
                 <div>{{ p.translate }}</div>
               </div>
@@ -32,7 +33,7 @@
       </div>
 
       <div style="width: 100%" class="pa-8">
-        <div class="text-h1 mb-8">
+        <div class="text-h1 font-weight-black mb-8">
           翻译大王👑
         </div>
         <div class="text-h4 mb-8">
@@ -110,29 +111,54 @@ async function processPDF() {
   const paragraph = await generateParagraph(allTexts, (await doc.getPage(1)).getViewport({scale: 1}))
   displayParagraph.push(...paragraph)
 // 动态估算剩余时间
-  for (let i = 0; i < displayParagraph.length; i++) {
-    const p = displayParagraph[i];
+  const BATCH_SIZE = 200; // 每批并发的任务数
 
-    const startTime = performance.now(); // 起始时间
+  for (let batchStart = 0; batchStart < displayParagraph.length; batchStart += BATCH_SIZE) {
+    const batchEnd = Math.min(batchStart + BATCH_SIZE, displayParagraph.length);
+    const batch = displayParagraph.slice(batchStart, batchEnd);
 
-    if (!check.value || i < 10) {
-      p.translating = true;
-      p.translate = await doTranslation(p.content, apiKey.value);
-      p.translating = false;
-    }
+    const startTime = performance.now(); // 批次起始时间
 
-    // 每段翻译结束后计算耗时
-    const elapsedTime = performance.now() - startTime; // 单次翻译耗时（ms）
+    // 使用 `Promise.allSettled` 并发执行翻译
+    const results = await Promise.allSettled(
+      batch.map(async (p, index) => {
+        if (!check.value || batchStart + index < 10) {
+          p.translating = true;
+          try {
+            return await doTranslation(p.content, apiKey.value);
+          } catch (error) {
+            console.error(`段落翻译失败：${error}`);
+            return "翻译失败"; // 如果翻译失败，返回默认值
+          } finally {
+            p.translating = false;
+          }
+        }
+      })
+    );
 
-    // 估算剩余段落的翻译时间
-    const remainingTimeMs = elapsedTime * (paragraph.length - (i + 1));
-    // 转换成分钟和秒
+    // 根据结果更新每个段落的翻译内容
+    results.forEach((result, index) => {
+      if (result.status === "fulfilled") {
+        batch[index].translate = result.value; // 翻译成功的段落
+      } else {
+        batch[index].translate = "翻译失败"; // 翻译失败的段落
+      }
+    });
+
+    // 批次完成后计算耗时
+    const elapsedTime = performance.now() - startTime; // 单批耗时（毫秒）
+    const remainingBatches = Math.ceil((displayParagraph.length - batchEnd) / BATCH_SIZE);
+    const remainingTimeMs = elapsedTime * remainingBatches;
+
+    // 将耗时转换为分钟和秒
     const remainingMinutes = Math.floor(remainingTimeMs / 60000);
     const remainingSeconds = Math.floor((remainingTimeMs % 60000) / 1000);
 
-    // 更新进度和提示
-    progress.value = Math.round(((i + 1) / paragraph.length) * 100);
-    remainTime.value = `${remainingMinutes} 分 ${remainingSeconds} 秒`
+    // 更新进度和剩余时间
+    progress.value = Math.round((batchEnd / displayParagraph.length) * 100);
+    remainTime.value = `${remainingMinutes} 分 ${remainingSeconds} 秒`;
+
+    console.log(`批次 ${batchStart / BATCH_SIZE + 1} 完成，总进度：${progress.value}%`);
   }
 
 
