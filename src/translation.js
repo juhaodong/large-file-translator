@@ -6,7 +6,10 @@ const apiKey = ""; // 替换为您的 OpenAI API 密钥
 
 export async function doTranslation(str, apiKey) {
   try {
-    const openai = new OpenAI({apiKey,dangerouslyAllowBrowser:true});
+    if (str.length < 6) {
+      return str
+    }
+    const openai = new OpenAI({apiKey, dangerouslyAllowBrowser: true});
     // 调用 OpenAI 翻译 API
     const completion = await openai.chat.completions.create({
       messages: [{
