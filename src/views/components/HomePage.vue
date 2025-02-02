@@ -31,40 +31,67 @@
 
         </div>
       </div>
+      <div style="height: 100vh" class="d-flex flex-column">
+        <v-card class="pa-2 px-4 d-flex align-center" tile v-if="userStore.currentUser">
+          <div class="text-caption">
+            欢迎：{{ userStore.currentUser.email }}
+          </div>
+          <v-spacer></v-spacer>
+          <v-btn @click="userStore.showAddCredit=true" color="white" flat prepend-icon="mdi-wallet">
+            {{ 0 }}
+          </v-btn>
 
-      <div style="width: 100%;height: 100vh;overflow-y: scroll" class="pa-8 d-flex flex-column">
-        <div class="text-h3 font-weight-black mb-8">
-          翻译大王👑
-        </div>
-        <div class="text-h6 mb-8">
-          不限制大小，页数，好用又便宜（免费试用版）,目前只能翻译非扫描版PDF
-        </div>
-        <div>
-          <v-text-field :disabled="isProcessing" v-model="apiKey" label="输入你的api key"></v-text-field>
-          <v-file-upload
-            title="把PDF拖到这"
-            divider-text="或者说"
-            browse-text="点这里从本地上传"
-            :disabled="isProcessing" prepend-icon="" append-inner-icon="mdi-file" v-model="file" label="选择 PDF 文件"
-          ></v-file-upload>
-          <v-checkbox v-model="check" :disabled="isProcessing" label="测试模式(只翻译前10个段落)"></v-checkbox>
-          <template v-if="isProcessing">
-            <v-progress-circular indeterminate></v-progress-circular>
-            {{ progress }}%/100% 预计剩余时间:{{ remainTime }}
-          </template>
-          <v-btn size="large" v-else color="green" @click="processPDF" :loading="isProcessing">
-            翻译并预览 PDF
-          </v-btn>
-          <v-btn class="ml-1" v-if="pdfReady" :disabled="isProcessing" size="large" color="black" @click="generatePdf">
-            下载PDF
-          </v-btn>
-        </div>
-        <v-spacer></v-spacer>
-        <div class="mt-8 text-body-1">
-         这是翻译大王@2025 Developed by Haodong Ju & Shang
+        </v-card>
+        <div style="width: 100%;overflow-y: scroll" class="pa-8 d-flex flex-column flex-grow-1">
+          <div class="text-h3 font-weight-black mb-8">
+            欢迎使用翻译大王👑
+          </div>
+          <div class="text-h6 mb-8">
+            不限制大小，页数，好用又便宜（免费试用版）,目前只能翻译非扫描版PDF
+          </div>
+          <div>
+            <v-text-field :disabled="isProcessing" v-model="apiKey" label="输入你的api key"></v-text-field>
+            <v-file-upload
+              title="把PDF拖到这"
+              divider-text="或者说"
+              browse-text="点这里从本地上传"
+              :disabled="isProcessing" prepend-icon="" append-inner-icon="mdi-file" v-model="file" label="选择 PDF 文件"
+            ></v-file-upload>
+            <v-checkbox v-model="check" :disabled="isProcessing" label="测试模式(只翻译前10个段落)"></v-checkbox>
+            <template v-if="isProcessing">
+              <v-progress-circular indeterminate></v-progress-circular>
+              {{ progress }}%/100% 预计剩余时间:{{ remainTime }}
+            </template>
+            <v-btn size="large" v-else color="green" @click="processPDF" :loading="isProcessing">
+              翻译并预览 PDF
+            </v-btn>
+            <v-btn
+              class="ml-1" v-if="pdfReady" :disabled="isProcessing" size="large" color="black" @click="generatePdf"
+            >
+              下载PDF
+            </v-btn>
+          </div>
+          <v-spacer></v-spacer>
+          <div class="mt-8 text-body-1">
+            这是翻译大王@2025 Developed by Haodong Ju & Shang
+          </div>
         </div>
       </div>
+
+
     </div>
+    <login-form/>
+    <v-dialog v-model="userStore.showAddCredit" width="min-content">
+      <v-card class="pa-0" style="width: min-content">
+        <stripe-buy-button
+          :client-reference-id="userStore.currentUser.id"
+          :customer-email="userStore.currentUser.email"
+          buy-button-id="buy_btn_1Qo52dEJRuEVURG7VrJH3LwX"
+          publishable-key="pk_live_51Qo0FyEJRuEVURG7fdaxZKiQK2IE5HaGrEemR9OBHc2QY8IoLuSDxRTGYQUvmyLUZh1ia4xAAwJIHWUrUKMlcOop00X7HciJTz"
+        >
+        </stripe-buy-button>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -74,7 +101,10 @@ import {getDocument,} from 'pdfjs-dist'
 import {doTranslation} from "@/translation.js";
 import jsPDF from "jspdf";
 import '@/font.js'
+import LoginForm from "@/views/components/LoginForm.vue";
+import {useUserStore} from "@/plugins/supabase.js";
 
+const userStore = useUserStore()
 const displayParagraph = reactive([]);
 // 新增变量：用于进度条显示
 const isProcessing = ref(false); // 控制是否显示进度条
