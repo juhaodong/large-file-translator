@@ -1,6 +1,6 @@
 import hillo from "hillo";
 
-const cloudUrl = "http://localhost/";
+const cloudUrl = "https://cloud-v2.aaden.io/";
 
 let extraHook = null;
 
@@ -29,6 +29,18 @@ export function onAuthChange(authEventHook) {
   if (typeof authEventHook === "function") {
     extraHook = authEventHook;
   }
+}
+
+
+export function getCredit(uid) {
+  return hillo.get(cloudUrl + "user-credit/" + uid + "/balance");
+}
+
+export async function translate(text, userId) {
+  return await hillo.jsonPost(cloudUrl + "translation/translate", {
+    text, userId
+  })
+
 }
 
 /**
@@ -100,9 +112,11 @@ export async function getUserInfoByToken(token) {
 
 async function init() {
   const token = localStorage.getItem("token");
+  console.log(token)
   if (token) {
     try {
       const userInfo = await getUserInfoByToken(token);
+      console.log(userInfo)
       if (userInfo) {
         await touchPoint({type: "login", token, userInfo});
       }

@@ -23,7 +23,7 @@
                 style="width: 100%"
               >
                 <div :style="{fontSize:p.fontSize*0.8+'px'}">{{ p.content }}</div>
-                <v-progress-linear indeterminate v-if="p.translating" style="width: 100%"></v-progress-linear>
+                <v-progress-linear indeterminate v-if="p.translating" style="width: 20%"></v-progress-linear>
                 <div>{{ p.translate }}</div>
               </div>
             </div>
@@ -38,7 +38,7 @@
           </div>
           <v-spacer></v-spacer>
           <v-btn @click="userStore.showAddCredit=true" color="white" flat prepend-icon="mdi-wallet">
-            {{ 0 }}
+            {{ userStore.currentCredit }}
           </v-btn>
 
         </v-card>
@@ -50,7 +50,6 @@
             不限制大小，页数，好用又便宜（免费试用版）,目前只能翻译非扫描版PDF
           </div>
           <div>
-            <v-text-field :disabled="isProcessing" v-model="apiKey" label="输入你的api key"></v-text-field>
             <v-file-upload
               title="把PDF拖到这"
               divider-text="或者说"
@@ -59,8 +58,18 @@
             ></v-file-upload>
             <v-checkbox v-model="check" :disabled="isProcessing" label="测试模式(只翻译前10个段落)"></v-checkbox>
             <template v-if="isProcessing">
-              <v-progress-circular indeterminate></v-progress-circular>
-              {{ progress }}%/100% 预计剩余时间:{{ remainTime }}
+              <div style="display: grid;grid-template-columns: repeat(auto-fill,12px);grid-gap: 2px">
+                <v-card
+                  flat
+                  tile
+                  height="12" width="12" v-for="p in displayParagraph"
+                  :color="p.translate?'green':(p.translating?'yellow':'white')"
+                >
+
+                </v-card>
+              </div>
+
+              预计剩余时间:{{ remainTime }}
             </template>
             <v-btn size="large" v-else color="green" @click="processPDF" :loading="isProcessing">
               翻译并预览 PDF
@@ -82,7 +91,7 @@
     </div>
     <login-form/>
     <v-dialog v-model="userStore.showAddCredit" width="min-content">
-      <v-card class="pa-0" style="width: min-content">
+      <v-card color="black" class="py-4" style="width: min-content" min-height="200">
         <stripe-buy-button
           :client-reference-id="userStore.currentUser.id"
           :customer-email="userStore.currentUser.email"
@@ -109,7 +118,6 @@ const displayParagraph = reactive([]);
 // 新增变量：用于进度条显示
 const isProcessing = ref(false); // 控制是否显示进度条
 const progress = ref(0); // 进度值 (0-100)
-const apiKey = ref(localStorage.getItem('apiKey') ?? '')
 const file = ref(null)            // 原始PDF文件
 const check = ref(false)
 const remainTime = ref("-")
@@ -117,9 +125,6 @@ const pdfDoc = ref(null)
 const pdfReady = ref(false)
 const docName = ref('')
 
-watch(apiKey, (newVal, oldVal) => {
-  localStorage.setItem('apiKey', newVal)
-})
 watch(file, (newVal, oldVal) => {
   console.log(file.value)
   pdfReady.value = false
@@ -160,14 +165,10 @@ async function processPDF() {
     isProcessing.value = false
     return
   }
-  if (!apiKey.value) {
-    alert("你没输入Api Key 啊")
-    isProcessing.value = false
-    return
-  }
+
 
 // 动态估算剩余时间
-  const BATCH_SIZE = 200; // 每批并发任务数
+  const BATCH_SIZE = 50; // 每批并发任务数
   let processedCount = 0; // 已完成的请求计数
   let totalElapsedTime = 0; // 累计已完成请求的耗时
 
@@ -185,7 +186,7 @@ async function processPDF() {
           // 记录单个请求的开始时间
           const startTime = performance.now();
           try {
-            p.translate = await doTranslation(p.content, apiKey.value);
+            p.translate = await doTranslation(p.content, userStore.currentUser.id);
           } catch (error) {
             console.error(`段落翻译失败：${error}`);
             p.translate = "翻译失败";
@@ -206,7 +207,7 @@ async function processPDF() {
           const remainingMinutes = Math.floor(remainingTimeMs / 60000);
           const remainingSeconds = Math.floor((remainingTimeMs % 60000) / 1000);
 
-          progress.value = Math.round((processedCount / displayParagraph.length) * 100); // 更新进度
+          progress.value = processedCount
           remainTime.value = `${remainingMinutes} 分 ${remainingSeconds} 秒`; // 更新剩余时间
         }
       })
@@ -292,7 +293,7 @@ async function generateParagraph(allTextContent, viewport) {
       y: viewport.height - item.transform[5], // Y 坐标（基础 PDF Y 方向反转处理）
       width: item.width, // 文本宽度
       height: item.height, // 文本高度
-      fontSize: item.transform[0], // 字体大小
+      fontSize: Math.max(item.transform[0], 14), // 字体大小
       page: item.page,
     };
 

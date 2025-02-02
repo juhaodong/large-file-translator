@@ -1,5 +1,5 @@
 import {defineStore} from 'pinia'
-import {loginUsingOTP, onAuthChange, sendOTPApi} from "@/dataLayer/cloudApi.js";
+import {getCredit, loginUsingOTP, onAuthChange, sendOTPApi} from "@/dataLayer/cloudApi.js";
 
 
 export const useUserStore = defineStore('user-store', () => {
@@ -11,6 +11,22 @@ export const useUserStore = defineStore('user-store', () => {
   onAuthChange(({event, token, userInfo}) => {
     currentUser.value = userInfo
     shouldShowLoginForm.value = token === null
+    refreshCredit()
+  })
+
+  async function refreshCredit() {
+    if (currentUser.value) {
+      const old = currentCredit.value
+      currentCredit.value = await getCredit(currentUser.value.id)
+      if (old !== currentCredit.value) {
+        showAddCredit.value = false
+      }
+
+    }
+  }
+
+  onMounted(() => {
+    setInterval(refreshCredit, 30 * 1000)
   })
 
   function validateEmail(input) {
@@ -55,6 +71,7 @@ export const useUserStore = defineStore('user-store', () => {
     currentUser,
     emailInput,
     validateEmail,
+    currentCredit,
     sendOTP,
     showAddCredit,
     reset,
