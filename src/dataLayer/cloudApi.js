@@ -1,6 +1,7 @@
 import hillo from "hillo";
 
-const cloudUrl = "https://cloud-v2.aaden.io/";
+// const cloudUrl = "https://cloud-v2.aaden.io/";
+const cloudUrl = "http://localhost/";
 
 let extraHook = null;
 
@@ -20,6 +21,84 @@ const touchPoint = async (event) => {
   // 调用额外的钩子函数，若存在的话
   extraHook && extraHook(event);
 };
+
+
+/**
+ * 获取用户的所有项目
+ * @param {string} userId - 用户 ID
+ * @returns {Promise<any>} - 用户的项目列表
+ */
+export async function getUserProjects(userId) {
+  try {
+    const response = await hillo.get(`${cloudUrl}api/projects/user/${userId}`);
+    return response; // 假设响应中直接包含项目列表
+  } catch (error) {
+    console.error("获取用户项目失败：", error);
+    throw new Error("无法获取用户项目");
+  }
+}
+
+/**
+ * 创建新项目
+ * @param {object} projectData - 创建项目的请求数据，包括 userId, fileUrl 和 sourceLanguage
+ * @returns {Promise<any>} - 返回创建的项目详情
+ */
+export async function createProject(projectData) {
+  try {
+    const response = await hillo.jsonPost(`${cloudUrl}api/projects/create`, projectData);
+    return response; // 假设响应内容是新创建项目的详细信息
+  } catch (error) {
+    console.error("创建项目失败：", error);
+    throw new Error("无法创建项目，请检查请求数据");
+  }
+}
+
+/**
+ * 获取项目详情
+ * @param {number} projectId - 项目 ID
+ * @returns {Promise<any>} - 项目详情数据
+ */
+export async function getProjectDetails(projectId) {
+  try {
+    const response = await hillo.get(`${cloudUrl}api/projects/${projectId}/details`);
+    return response; // 假设响应内容是项目的详情数据
+  } catch (error) {
+    console.error("获取项目详情失败：", error);
+    throw new Error("无法获取项目详情");
+  }
+}
+
+/**
+ * 上传文件并创建项目
+ * @param {File} file - 要上传的文件
+ * @param {string} userId - 用户 ID
+ * @param {string} sourceLanguage - 文件的语言 (可选, 默认 'eng')
+ * @returns {Promise<any>} - 返回创建的项目详情
+ */
+export async function uploadAndCreateProject(file, userId, sourceLanguage = 'eng') {
+  try {
+    // 上传文件
+    const uploadResult = await uploadFile(file);
+    if (!uploadResult) {
+      throw new Error("文件上传失败");
+    }
+
+    // 创建项目
+    return await createProject({
+      userId,
+      fileUrl: uploadResult,
+      sourceLanguage
+    });
+  } catch (error) {
+    console.error("文件上传或项目创建失败：", error);
+    throw new Error("无法上传文件并创建项目");
+  }
+}
+
+
+export async function uploadFile(file) {
+  return await hillo.postWithUploadFile(cloudUrl + 'uploadFile', {file})
+}
 
 /**
  * 注入通用钩子函数，用于监听登录和登出逻辑

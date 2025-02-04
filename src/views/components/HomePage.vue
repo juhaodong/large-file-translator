@@ -19,12 +19,13 @@
               style="min-height: 100%;width: 100%"
             >
               <div
-                v-for="p in displayParagraph" class="mt-8" :style="{fontSize: p.fontSize + 'px'}"
+                v-for="p in displayParagraph" class="mt-8"
                 style="width: 100%"
+                :style="{fontSize: p.fontSize*1.5 + 'px'}"
+                :key="p.id"
               >
-                <div :style="{fontSize:p.fontSize*0.8+'px'}">{{ p.content }}</div>
-                <v-progress-linear indeterminate v-if="p.translating" style="width: 20%"></v-progress-linear>
-                <div>{{ p.translate }}</div>
+                <div :style="{fontSize:p.fontSize*1.2+'px'}">{{ p.text }}</div>
+                <div>{{ p.translatedText }}</div>
               </div>
             </div>
           </div>
@@ -112,6 +113,7 @@ import jsPDF from "jspdf";
 import '@/font.js'
 import LoginForm from "@/views/components/LoginForm.vue";
 import {useUserStore} from "@/plugins/supabase.js";
+import {uploadAndCreateProject} from "@/dataLayer/cloudApi.js";
 
 const userStore = useUserStore()
 const displayParagraph = reactive([]);
@@ -125,10 +127,10 @@ const pdfDoc = ref(null)
 const pdfReady = ref(false)
 const docName = ref('')
 
-watch(file, (newVal, oldVal) => {
-  console.log(file.value)
-  pdfReady.value = false
-  showTextInPdf()
+watch(file, async (newVal, oldVal) => {
+  const res = await uploadAndCreateProject(file.value, userStore.currentUser.id)
+  console.log(res)
+  displayParagraph.push(...res.documents)
 })
 
 async function showTextInPdf() {

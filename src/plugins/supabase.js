@@ -1,5 +1,5 @@
 import {defineStore} from 'pinia'
-import {getCredit, loginUsingOTP, onAuthChange, sendOTPApi} from "@/dataLayer/cloudApi.js";
+import {getCredit, getUserProjects, loginUsingOTP, onAuthChange, sendOTPApi} from "@/dataLayer/cloudApi.js";
 
 
 export const useUserStore = defineStore('user-store', () => {
@@ -8,20 +8,31 @@ export const useUserStore = defineStore('user-store', () => {
   const formReady = ref(false)
   const currentCredit = ref(0)
   const showAddCredit = ref(false)
+  const userProjects = ref([])
   onAuthChange(({event, token, userInfo}) => {
     currentUser.value = userInfo
     shouldShowLoginForm.value = token === null
-    refreshCredit()
+    refreshUserInfo()
   })
 
-  async function refreshCredit() {
+  async function refreshUserInfo() {
     if (currentUser.value) {
-      const old = currentCredit.value
-      currentCredit.value = await getCredit(currentUser.value.id)
-      if (old !== currentCredit.value) {
-        showAddCredit.value = false
-      }
+      refreshCredit()
+      refreshProjects()
+    }
+  }
 
+  async function refreshProjects() {
+    if (currentUser.value) {
+      userProjects.value = await getUserProjects(currentUser.value.id)
+    }
+  }
+
+  async function refreshCredit() {
+    const old = currentCredit.value
+    currentCredit.value = await getCredit(currentUser.value.id)
+    if (old !== currentCredit.value) {
+      showAddCredit.value = false
     }
   }
 
