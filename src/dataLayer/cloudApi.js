@@ -23,81 +23,63 @@ const touchPoint = async (event) => {
 };
 
 
-/**
- * 获取用户的所有项目
- * @param {string} userId - 用户 ID
- * @returns {Promise<any>} - 用户的项目列表
- */
-export async function getUserProjects(userId) {
-  try {
-    const response = await hillo.get(`${cloudUrl}api/projects/user/${userId}`);
-    return response; // 假设响应中直接包含项目列表
-  } catch (error) {
-    console.error("获取用户项目失败：", error);
-    throw new Error("无法获取用户项目");
-  }
-}
+// 前端函数，用于监听翻译进度
+export function startTranslation(fileHash, userId, onTranslateProgress) {
+  // 构建 SSE URL，传递 fileHash 和 userId 参数
+  const url = `${cloudUrl}translation/translate/${userId}/${(fileHash)}`;
 
-/**
- * 创建新项目
- * @param {object} projectData - 创建项目的请求数据，包括 userId, fileUrl 和 sourceLanguage
- * @returns {Promise<any>} - 返回创建的项目详情
- */
-export async function createProject(projectData) {
-  try {
-    const response = await hillo.jsonPost(`${cloudUrl}api/projects/create`, projectData);
-    return response; // 假设响应内容是新创建项目的详细信息
-  } catch (error) {
-    console.error("创建项目失败：", error);
-    throw new Error("无法创建项目，请检查请求数据");
-  }
-}
+  // 创建一个新的 EventSource 实例
+  const eventSource = new EventSource(url);
 
-/**
- * 获取项目详情
- * @param {number} projectId - 项目 ID
- * @returns {Promise<any>} - 项目详情数据
- */
-export async function getProjectDetails(projectId) {
-  try {
-    const response = await hillo.get(`${cloudUrl}api/projects/${projectId}/details`);
-    return response; // 假设响应内容是项目的详情数据
-  } catch (error) {
-    console.error("获取项目详情失败：", error);
-    throw new Error("无法获取项目详情");
-  }
-}
+  // 监听 'start' 事件
+  eventSource.addEventListener('start', (event) => {
+    console.log('翻译开始:', event.data);
+  });
 
-/**
- * 上传文件并创建项目
- * @param {File} file - 要上传的文件
- * @param {string} userId - 用户 ID
- * @param {string} sourceLanguage - 文件的语言 (可选, 默认 'eng')
- * @returns {Promise<any>} - 返回创建的项目详情
- */
-export async function uploadAndCreateProject(file, userId, sourceLanguage = 'eng') {
-  try {
-    // 上传文件
-    const uploadResult = await uploadFile(file);
-    if (!uploadResult) {
-      throw new Error("文件上传失败");
+  // 监听 'progress' 事件
+  eventSource.addEventListener('progress', (event) => {
+    // 拆分返回的进度数据，例如 "documentId,status"
+    const [documentId, status] = event.data.split(',');
+    if (status === 'STARTED') {
+      onTranslateProgress({
+        id: documentId,
+        processing: true,
+      })
+    } else if (status === 'FAILED') {
+      onTranslateProgress({
+        id: documentId,
+        processing: false,
+        failed: true,
+      })
+    } else {
+      const result = status.substring(6)
+      onTranslateProgress({
+        id: documentId,
+        processing: false,
+        failed: false,
+        translatedText: result,
+      })
     }
+  });
 
-    // 创建项目
-    return await createProject({
-      userId,
-      fileUrl: uploadResult,
-      sourceLanguage
-    });
-  } catch (error) {
-    console.error("文件上传或项目创建失败：", error);
-    throw new Error("无法上传文件并创建项目");
-  }
+  // 监听 'complete' 事件
+  eventSource.addEventListener('complete', (event) => {
+    console.log('翻译完成:', event.data);
+
+    eventSource.close();
+  });
+
+  // 监听 'error' 事件
+  eventSource.addEventListener('error', (event) => {
+    console.error('翻译过程中发生错误:', event.data || '服务器连接中断');
+    eventSource.close();
+  });
 }
 
 
-export async function uploadFile(file) {
-  return await hillo.postWithUploadFile(cloudUrl + 'uploadFile', {file})
+export async function createAndAnalysisFile(file, userId) {
+  return await hillo.postWithUploadFile(cloudUrl +
+    'translation/create/file', {file, userId})
 }
 
 /**

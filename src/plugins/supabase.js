@@ -1,5 +1,5 @@
 import {defineStore} from 'pinia'
-import {getCredit, getUserProjects, loginUsingOTP, onAuthChange, sendOTPApi} from "@/dataLayer/cloudApi.js";
+import {getCredit, loginUsingOTP, onAuthChange, sendOTPApi} from "@/dataLayer/cloudApi.js";
 
 
 export const useUserStore = defineStore('user-store', () => {
@@ -24,7 +24,6 @@ export const useUserStore = defineStore('user-store', () => {
 
   async function refreshProjects() {
     if (currentUser.value) {
-      userProjects.value = await getUserProjects(currentUser.value.id)
     }
   }
 
