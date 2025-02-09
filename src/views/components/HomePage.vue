@@ -23,11 +23,14 @@
                 v-for="p in displayParagraph" class="mt-8"
                 style="width: 100%"
               >
-                <div v-html="renderMarkdown(p.text)"></div>
+                <div v-if="displayMode==='双语'||displayMode==='原文'" v-html="renderMarkdown(p.text)"></div>
                 <div v-if="p.processing">
                   .......
                 </div>
-                <div v-html="renderMarkdown(p.translatedText)" v-if="p.translatedText"></div>
+                <div
+                  v-html="renderMarkdown(p.translatedText)"
+                  v-if="p.translatedText&&p.translatedText!==p.text&&(displayMode!=='原文')"
+                ></div>
               </div>
             </div>
           </div>
@@ -46,42 +49,69 @@
 
         </v-card>
         <div style="width: 100%;overflow-y: scroll" class="pa-8 d-flex flex-column flex-grow-1">
-          <div class="text-h3 font-weight-black mb-8">
-            欢迎使用PDF翻译大王👑
-          </div>
-          <div class="text-h6 mb-8">
-            不限制大小，页数，好用又便宜
-          </div>
-          <div>
-            <v-file-upload
-              accept=".pdf"
-              title="把PDF拖到这"
-              divider-text="或者说"
-              browse-text="点这里从本地上传"
-              :disabled="isProcessing" prepend-icon="" append-inner-icon="mdi-file" v-model="file" label="选择 PDF 文件"
-            ></v-file-upload>
-            <v-checkbox v-model="check" :disabled="isProcessing" label="测试模式(只翻译前10个段落)"></v-checkbox>
-            <template v-if="isProcessing">
-              <div style="display: grid;grid-template-columns: repeat(auto-fill,12px);grid-gap: 2px">
-                <v-card
-                  flat
-                  tile
-                  height="12" width="12" v-for="p in displayParagraph"
-                  :color="p.translate?'green':(p.processing?'yellow':'white')"
-                >
-                </v-card>
-              </div>
 
-              预计剩余时间:{{ remainTime }}
+          <div>
+            <template v-if="file==null">
+              <div class="text-h3 font-weight-black mb-8">
+                欢迎使用PDF翻译大王👑
+              </div>
+              <div class="text-h6 mb-8">
+                不限制大小，页数，好用又便宜
+              </div>
+              <v-file-upload
+                v-if="file===null"
+                accept=".pdf"
+                title="把PDF拖到这"
+                divider-text="或者说"
+                browse-text="点这里从本地上传"
+                :disabled="isProcessing" prepend-icon="" append-inner-icon="mdi-file" v-model="file"
+                label="选择 PDF 文件"
+              ></v-file-upload>
             </template>
-            <v-btn size="large" v-else color="green" @click="processPDF" :loading="isProcessing">
-              翻译并预览 PDF
-            </v-btn>
-            <v-btn
-              class="ml-1" v-if="pdfReady" :disabled="isProcessing" size="large" color="black" @click="generatePdf"
-            >
-              下载PDF
-            </v-btn>
+
+            <template v-if="file">
+              <h2 class="text-h4 mb-8">正在分析和翻译🔍{{ docName }}</h2>
+              <template v-if="loadingFile">
+                <div class="text-body-2">
+                  根据上传的文件大小来说，有可能需要几分钟的时间，请耐心等待，在分析期间，请不要关闭浏览器窗口。
+                </div>
+                <v-progress-linear indeterminate></v-progress-linear>
+              </template>
+              <template v-else>
+                <v-select class="mt-2" :items="['中文','原文','双语']" v-model="displayMode"></v-select>
+
+                <div
+
+                  style="display: grid;grid-template-columns: repeat(auto-fill,12px);grid-gap: 2px"
+                >
+                  <v-card
+                    flat
+                    tile
+                    height="12" width="12" v-for="p in displayParagraph"
+                    :color="p.translatedText?'green':(p.processing?'yellow':'white')"
+                  >
+                  </v-card>
+                </div>
+
+                <div class="mt-4" style="display: grid;grid-gap: 16px">
+                  <v-btn v-if="!pdfReady" size="large" color="green" @click="processPDF" :loading="isProcessing">
+                    翻译并预览 PDF
+                  </v-btn>
+                  <v-btn
+                    v-if="pdfReady" :disabled="isProcessing" size="large" color="blue" @click="generatePdf"
+                  >
+                    下载PDF
+                  </v-btn>
+                  <v-btn @click="reset" size="large" color="blue">
+                    回到开始
+                  </v-btn>
+                </div>
+              </template>
+
+
+            </template>
+
+
           </div>
           <v-spacer></v-spacer>
           <div class="mt-8 text-body-1">
@@ -125,7 +155,6 @@ const defaultImageRenderer = md.renderer.rules.image
 let imageDic = {}
 md.renderer.rules.image = (tokens, idx, options, env, self) => {
   const src = tokens[idx].attrGet('src')
-  console.log(src, imageDic)
   if (src.startsWith('_')) {
     tokens[idx].attrSet('src', "data:image/jpg;base64," + imageDic[src])
     tokens[idx].attrSet('style', "max-width:100%;")
@@ -134,15 +163,15 @@ md.renderer.rules.image = (tokens, idx, options, env, self) => {
   return defaultImageRenderer(tokens, idx, options, env, self)
 };
 
+
+const displayMode = ref("双语")
 const userStore = useUserStore()
 
 const displayParagraph = reactive([]);
+const loadingFile = ref(false)
 // 新增变量：用于进度条显示
 const isProcessing = ref(false); // 控制是否显示进度条
-const progress = ref(0); // 进度值 (0-100)
 const file = ref(null)            // 原始PDF文件
-const check = ref(false)
-const remainTime = ref("-")
 const pdfDoc = ref(null)
 const pdfReady = ref(false)
 const docName = ref('')
@@ -152,7 +181,17 @@ function renderMarkdown(markdownText) {
   return md.render(markdownText)
 }
 
+function reset() {
+  file.value = null
+  loadingFile.value = false
+  displayParagraph.length = 0
+  pdfReady.value = false
+  displayMode.value = "双语"
+}
+
 watch(file, async () => {
+  docName.value = file.value.name
+  loadingFile.value = true
   const {result, document} = await createAndAnalysisFile(file.value, userStore.currentUser.id)
   displayParagraph.length = 0
   console.log(result, document)
@@ -161,7 +200,8 @@ watch(file, async () => {
     displayParagraph.push(...document)
     currentFileHash = document[0].fileHash
   }
-
+  pdfReady.value = !displayParagraph.find(it => it.translatedText === null)
+  loadingFile.value = false
   console.log(result)
 
 })
@@ -170,7 +210,7 @@ watch(file, async () => {
 // 提取 PDF 文字并调用翻译函数
 async function processPDF() {
   isProcessing.value = true;
-  startTranslation(currentFileHash, userStore.currentUser.id, (status) => {
+  await startTranslation(currentFileHash, userStore.currentUser.id, (status) => {
     const item = displayParagraph.find(p => parseInt(p.id) === parseInt(status.id))
     Object.keys(status).forEach(k => {
       item[k] = status[k]

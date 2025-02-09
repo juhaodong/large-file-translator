@@ -1,7 +1,7 @@
 import hillo from "hillo";
 
-// const cloudUrl = "https://cloud-v2.aaden.io/";
-const cloudUrl = "http://localhost/";
+const cloudUrl = "https://cloud-v2.aaden.io/";
+// const cloudUrl = "http://localhost/";
 
 let extraHook = null;
 
@@ -24,56 +24,60 @@ const touchPoint = async (event) => {
 
 
 // 前端函数，用于监听翻译进度
-export function startTranslation(fileHash, userId, onTranslateProgress) {
+export async function startTranslation(fileHash, userId, onTranslateProgress) {
   // 构建 SSE URL，传递 fileHash 和 userId 参数
   const url = `${cloudUrl}translation/translate/${userId}/${(fileHash)}`;
+  const p=new Promise((resolve, reject) => {
+    const eventSource = new EventSource(url);
 
+    // 监听 'start' 事件
+    eventSource.addEventListener('start', (event) => {
+      console.log('翻译开始:', event.data);
+    });
+
+    // 监听 'progress' 事件
+    eventSource.addEventListener('progress', (event) => {
+      // 拆分返回的进度数据，例如 "documentId,status"
+      const [documentId, status] = event.data.split(',');
+      if (status === 'STARTED') {
+        onTranslateProgress({
+          id: documentId,
+          processing: true,
+        })
+      } else if (status === 'FAILED') {
+        onTranslateProgress({
+          id: documentId,
+          processing: false,
+          failed: true,
+        })
+      } else {
+        const result = status.substring(6)
+        onTranslateProgress({
+          id: documentId,
+          processing: false,
+          failed: false,
+          translatedText: result,
+        })
+      }
+    });
+    eventSource.addEventListener('complete', (event) => {
+      console.log('翻译完成:', event.data);
+      resolve()
+      eventSource.close();
+    });
+
+    // 监听 'error' 事件
+    eventSource.addEventListener('error', (event) => {
+      console.error('翻译过程中发生错误:', event.data || '服务器连接中断');
+      reject()
+      eventSource.close();
+    });
+  })
   // 创建一个新的 EventSource 实例
-  const eventSource = new EventSource(url);
 
-  // 监听 'start' 事件
-  eventSource.addEventListener('start', (event) => {
-    console.log('翻译开始:', event.data);
-  });
-
-  // 监听 'progress' 事件
-  eventSource.addEventListener('progress', (event) => {
-    // 拆分返回的进度数据，例如 "documentId,status"
-    const [documentId, status] = event.data.split(',');
-    if (status === 'STARTED') {
-      onTranslateProgress({
-        id: documentId,
-        processing: true,
-      })
-    } else if (status === 'FAILED') {
-      onTranslateProgress({
-        id: documentId,
-        processing: false,
-        failed: true,
-      })
-    } else {
-      const result = status.substring(6)
-      onTranslateProgress({
-        id: documentId,
-        processing: false,
-        failed: false,
-        translatedText: result,
-      })
-    }
-  });
 
   // 监听 'complete' 事件
-  eventSource.addEventListener('complete', (event) => {
-    console.log('翻译完成:', event.data);
 
-    eventSource.close();
-  });
-
-  // 监听 'error' 事件
-  eventSource.addEventListener('error', (event) => {
-    console.error('翻译过程中发生错误:', event.data || '服务器连接中断');
-    eventSource.close();
-  });
 }
 
 
