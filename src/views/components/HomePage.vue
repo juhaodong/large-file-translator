@@ -154,7 +154,9 @@
                           <v-progress-linear indeterminate></v-progress-linear>
                         </template>
                         <template v-else>
-                          <v-select v-if="pdfReady" class="mt-2" :items="['中文','原文','双语']" v-model="displayMode"></v-select>
+                          <v-select
+                            v-if="pdfReady" class="mt-2" :items="['中文','原文','双语']" v-model="displayMode"
+                          ></v-select>
 
                           <div
 
@@ -319,24 +321,24 @@ function generatePdf() {
   let cursorY = 10;
   cursorY = addWrappedText({
     doc,
-    text: "本文由翻译大王翻译，翻译就用翻译大王！！ Developed by Haodong Ju",
+    text: "本文由翻译大王翻译，翻译就用翻译大王👑！！ Developed by Haodong Ju & Shang",
     fontSize: 14,
     initialYPosition: cursorY,
   })
   cursorY += 10
   for (let i = 0; i < displayParagraph.length; i++) {
     const p = displayParagraph[i]
-    const baseFontSize = p.fontSize * 0.8
+    const baseFontSize = 14 * 0.8
     cursorY = addWrappedText({
       doc,
-      text: p.content,
+      text: p.text,
       fontSize: baseFontSize * 0.8,
       initialYPosition: cursorY,
     })
-    if (p.translate) {
+    if (p.translatedText && p.translatedText !== p.text) {
       cursorY = addWrappedText({
         doc,
-        text: p.translate,
+        text: p.translatedText,
         fontSize: baseFontSize,
         initialYPosition: cursorY,
       })
