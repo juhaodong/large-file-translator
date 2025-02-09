@@ -7,7 +7,7 @@
         <v-card class="pa-2 px-8 d-flex flex-shrink-0 align-center" tile v-if="userStore.currentUser">
           PDF翻译大王👑
           <v-spacer></v-spacer>
-          <div class="text-caption mr-4">
+          <div v-if="largeAndUp" class="text-caption mr-4">
             {{ userStore.currentUser.email }}
           </div>
           <v-btn @click="userStore.showAddCredit=true" color="white" flat prepend-icon="mdi-wallet">
