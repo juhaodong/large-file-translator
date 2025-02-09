@@ -5,7 +5,7 @@ const userStore = useUserStore()
 </script>
 
 <template>
-  <v-dialog v-model="userStore.shouldShowLoginForm" max-width="600">
+  <v-dialog v-model="userStore.shouldShowLoginForm" max-width="600" persistent>
     <v-card class="pa-6 d-flex flex-column justify-center align-center text-center" width="100%">
       <div class="text-h6">
         登录/注册
