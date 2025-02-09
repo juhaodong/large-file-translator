@@ -27,7 +27,7 @@ const touchPoint = async (event) => {
 export async function startTranslation(fileHash, userId, onTranslateProgress) {
   // 构建 SSE URL，传递 fileHash 和 userId 参数
   const url = `${cloudUrl}translation/translate/${userId}/${(fileHash)}`;
-  const p=new Promise((resolve, reject) => {
+  const p = new Promise((resolve, reject) => {
     const eventSource = new EventSource(url);
 
     // 监听 'start' 事件
@@ -73,10 +73,9 @@ export async function startTranslation(fileHash, userId, onTranslateProgress) {
       eventSource.close();
     });
   })
-  // 创建一个新的 EventSource 实例
 
+  return p
 
-  // 监听 'complete' 事件
 
 }
 

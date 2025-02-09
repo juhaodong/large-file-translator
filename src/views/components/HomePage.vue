@@ -57,20 +57,27 @@
                     class="bg-grey-lighten-5"
                     style="min-height: 100%;width: 100%"
                   >
-                    <div
+                    <v-lazy
                       :key="p.id"
-                      v-for="p in displayParagraph" class="mt-8 text-break"
-                      style="width: 100%"
+                      v-for="p in displayParagraph" :min-height="60"
+                      :options="{'threshold':0.5}"
+                      transition="fade-transition"
                     >
-                      <div v-if="displayMode==='双语'||displayMode==='原文'" v-html="renderMarkdown(p.text)"></div>
-                      <div v-if="p.processing">
-                        .......
-                      </div>
                       <div
-                        v-html="renderMarkdown(p.translatedText)"
-                        v-if="p.translatedText&&p.translatedText!==p.text&&(displayMode!=='原文')"
-                      ></div>
-                    </div>
+                        class="mt-8 text-break"
+                        style="width: 100%"
+                      >
+                        <div v-if="displayMode==='双语'||displayMode==='原文'" v-html="renderMarkdown(p.text)"></div>
+                        <div v-if="p.processing">
+                          .......
+                        </div>
+                        <div
+                          v-html="renderMarkdown(p.translatedText)"
+                          v-if="p.translatedText&&p.translatedText!==p.text&&(displayMode!=='原文')"
+                        ></div>
+                      </div>
+                    </v-lazy>
+
                   </div>
                 </div>
 
@@ -178,10 +185,19 @@
 
                   <template v-if="expandToolBox">
                     <div @click.stop style="width: 100%" class="pa-4">
-                      <div class="d-flex align-center">
-                        <div class="text-body-2 text-truncate mb-4">
-                          {{ docName }}
+                      <div>
+                        <div class="text-h6 font-weight-black">
+                          正在显示
                         </div>
+                        <v-card
+                          @click="reset"
+                          class="text-body-2 text-truncate d-flex align-center mb-4 pa-2 bg-grey-darken-3"
+                          style="width: 100%"
+                        >
+                          <v-icon>mdi-file-document</v-icon>
+                          <div class="mx-2 flex-grow-1 text-truncate">{{ docName }}</div>
+                          <v-icon>mdi-close</v-icon>
+                        </v-card>
                       </div>
 
                       <div>
@@ -190,14 +206,11 @@
                           class="mt-2" :items="['中文','原文','双语']" v-model="displayMode"
                         ></v-select>
 
-                        <div class="mt-2" style="display: grid;grid-gap: 16px;grid-template-columns: repeat(2,1fr)">
+                        <div class="mt-2" style="display: grid;grid-gap: 16px;">
                           <v-btn
                             :disabled="isProcessing" size="large" color="white" @click="generatePdf"
                           >
                             下载PDF
-                          </v-btn>
-                          <v-btn @click="reset" size="large" color="grey-darken-5">
-                            回到开始
                           </v-btn>
                         </div>
 
