@@ -1,123 +1,212 @@
 <template>
   <div class="fill-height">
-    <div style="display: grid;grid-template-columns: repeat(2,minmax(0,1fr))">
-      <div>
-        <div class="bg-white" style="height: 100vh;overflow-y:scroll ">
-          <template v-if="displayParagraph.length===0">
-            <div class="text-h4  d-flex flex-column align-center justify-center" style="min-height: 100%">
-              <div class="text-h4">
-                ⌛
-              </div>
-              <div class="text-h6">
-                正在等待你来翻译
-              </div>
-            </div>
-          </template>
-          <div class="pa-4" ref="pdfDoc" v-else>
-            <div
-              class="bg-grey-lighten-3 pa-6"
-              style="min-height: 100%;width: 100%"
-            >
-              <div
-                :key="p.id"
-                v-for="p in displayParagraph" class="mt-8"
-                style="width: 100%"
-              >
-                <div v-if="displayMode==='双语'||displayMode==='原文'" v-html="renderMarkdown(p.text)"></div>
-                <div v-if="p.processing">
-                  .......
-                </div>
-                <div
-                  v-html="renderMarkdown(p.translatedText)"
-                  v-if="p.translatedText&&p.translatedText!==p.text&&(displayMode!=='原文')"
-                ></div>
-              </div>
-            </div>
-          </div>
+    <div>
 
-        </div>
-      </div>
-      <div style="height: 100vh" class="d-flex flex-column">
-        <v-card class="pa-2 px-4 d-flex align-center" tile v-if="userStore.currentUser">
-          <div class="text-caption">
-            欢迎：{{ userStore.currentUser.email }}
-          </div>
+
+      <div style="width: 100%;" class="d-flex flex-column">
+        <v-card class="pa-2 px-8 d-flex flex-shrink-0 align-center" tile v-if="userStore.currentUser">
+          PDF翻译大王👑
           <v-spacer></v-spacer>
+          <div class="text-caption mr-4">
+            {{ userStore.currentUser.email }}
+          </div>
           <v-btn @click="userStore.showAddCredit=true" color="white" flat prepend-icon="mdi-wallet">
             {{ userStore.currentCredit }}
           </v-btn>
 
         </v-card>
-        <div style="width: 100%;overflow-y: scroll" class="pa-8 d-flex flex-column flex-grow-1">
+        <div style="height: calc(100vh - 64px)" class="d-flex flex-column flex-grow-1">
+          <div class="pa-8 flex-grow-1" v-if="file==null">
+            <div class="text-h3 font-weight-black mb-8">
+              欢迎使用PDF翻译大王👑
+            </div>
+            <div class="text-h6 mb-8">
+              不限制大小，页数，好用又便宜
+            </div>
+            <v-file-upload
+              v-if="file===null"
+              accept=".pdf"
+              title="把PDF拖到这"
+              divider-text="或者说"
+              browse-text="点这里从本地上传"
+              :disabled="isProcessing" prepend-icon="" append-inner-icon="mdi-file" v-model="file"
+              label="选择 PDF 文件"
+            ></v-file-upload>
+            <v-spacer></v-spacer>
+            <div class="mt-8 text-body-1">
+              这是翻译大王@2025 Developed by Haodong Ju & Shang
+            </div>
+          </div>
 
-          <div>
-            <template v-if="file==null">
-              <div class="text-h3 font-weight-black mb-8">
-                欢迎使用PDF翻译大王👑
-              </div>
-              <div class="text-h6 mb-8">
-                不限制大小，页数，好用又便宜
-              </div>
-              <v-file-upload
-                v-if="file===null"
-                accept=".pdf"
-                title="把PDF拖到这"
-                divider-text="或者说"
-                browse-text="点这里从本地上传"
-                :disabled="isProcessing" prepend-icon="" append-inner-icon="mdi-file" v-model="file"
-                label="选择 PDF 文件"
-              ></v-file-upload>
-            </template>
-
-            <template v-if="file">
-              <h2 class="text-h4 mb-8">正在分析和翻译🔍{{ docName }}</h2>
-              <template v-if="loadingFile">
-                <div class="text-body-2">
-                  根据上传的文件大小来说，有可能需要几分钟的时间，请耐心等待，在分析期间，请不要关闭浏览器窗口。
+          <template v-if="file">
+            <div :style="largeAndUp?'display: grid;grid-template-columns: repeat(2,minmax(0,1fr))':''">
+              <div class="bg-white flex-grow-1" style="height:calc(100vh - 64px);overflow-y:scroll ">
+                <template v-if="displayParagraph.length===0">
+                  <div class="text-h4  d-flex flex-column align-center justify-center" style="min-height: 100%">
+                    <div class="text-h4">
+                      ⌛ 正在等待文件处理
+                    </div>
+                    <div class="text-h6" v-if="loadingFile">
+                      根据文件大小和网速情况，可能需要最长5分钟，在这个过程中，请不要关闭浏览器窗口
+                    </div>
+                  </div>
+                </template>
+                <div ref="pdfDoc" v-else>
+                  <div
+                    class="bg-grey-lighten-5 pa-10"
+                    style="min-height: 100%;width: 100%"
+                  >
+                    <div
+                      :key="p.id"
+                      v-for="p in displayParagraph" class="mt-8"
+                      style="width: 100%"
+                    >
+                      <div v-if="displayMode==='双语'||displayMode==='原文'" v-html="renderMarkdown(p.text)"></div>
+                      <div v-if="p.processing">
+                        .......
+                      </div>
+                      <div
+                        v-html="renderMarkdown(p.translatedText)"
+                        v-if="p.translatedText&&p.translatedText!==p.text&&(displayMode!=='原文')"
+                      ></div>
+                    </div>
+                  </div>
                 </div>
-                <v-progress-linear indeterminate></v-progress-linear>
-              </template>
+
+              </div>
+              <div v-if="largeAndUp" class="pa-8 bg-black d-flex flex-column" style="height:calc(100vh - 64px);">
+                <h2 class="text-h4 font-weight-black">正在分析和翻译🔍</h2>
+                <div class="text-h6">
+                  {{ docName }}
+                </div>
+                <div>
+                  <template v-if="loadingFile">
+                    <div class="text-body-2">
+                      根据上传的文件大小来说，有可能需要几分钟的时间，请耐心等待，在分析期间，请不要关闭浏览器窗口。
+                    </div>
+                    <v-progress-linear indeterminate></v-progress-linear>
+                  </template>
+                  <template v-else>
+                    <v-select class="mt-2" :items="['中文','原文','双语']" v-model="displayMode"></v-select>
+
+                    <div
+
+                      style="display: grid;grid-template-columns: repeat(auto-fill,12px);grid-gap: 2px"
+                    >
+                      <v-card
+                        flat
+                        tile
+                        height="12" width="12" v-for="p in displayParagraph"
+                        :color="p.translatedText?'green':(p.processing?'yellow':'white')"
+                      >
+                      </v-card>
+                    </div>
+
+                    <div class="mt-4" style="display: grid;grid-gap: 16px">
+                      <v-btn v-if="!pdfReady" size="large" color="green" @click="processPDF" :loading="isProcessing">
+                        翻译并预览 PDF
+                      </v-btn>
+                      <v-btn
+                        v-if="pdfReady" :disabled="isProcessing" size="large" color="blue" @click="generatePdf"
+                      >
+                        下载PDF
+                      </v-btn>
+                      <v-btn @click="reset" size="large" color="blue">
+                        回到开始
+                      </v-btn>
+                    </div>
+                  </template>
+                </div>
+                <v-spacer></v-spacer>
+                <div class="mt-8 text-body-1">
+                  这是翻译大王@2025 Developed by Haodong Ju & Shang
+                </div>
+
+              </div>
               <template v-else>
-                <v-select class="mt-2" :items="['中文','原文','双语']" v-model="displayMode"></v-select>
-
-                <div
-
-                  style="display: grid;grid-template-columns: repeat(auto-fill,12px);grid-gap: 2px"
+                <v-card
+                  @click="expandToolBox=!expandToolBox"
+                  style="position: fixed;right: 5%;bottom: 5%;"
+                  :style="expandToolBox||loadingFile||!pdfReady?'width:90%':''"
+                  class="pa-4 px-6 d-flex align-center text-h6" rounded="xl" color="black"
                 >
-                  <v-card
-                    flat
-                    tile
-                    height="12" width="12" v-for="p in displayParagraph"
-                    :color="p.translatedText?'green':(p.processing?'yellow':'white')"
-                  >
-                  </v-card>
-                </div>
 
-                <div class="mt-4" style="display: grid;grid-gap: 16px">
-                  <v-btn v-if="!pdfReady" size="large" color="green" @click="processPDF" :loading="isProcessing">
-                    翻译并预览 PDF
-                  </v-btn>
-                  <v-btn
-                    v-if="pdfReady" :disabled="isProcessing" size="large" color="blue" @click="generatePdf"
-                  >
-                    下载PDF
-                  </v-btn>
-                  <v-btn @click="reset" size="large" color="blue">
-                    回到开始
-                  </v-btn>
-                </div>
+
+                  <template v-if="expandToolBox||loadingFile||!pdfReady">
+                    <div @click.stop style="width: 100%" class="pa-4">
+                      <div class="d-flex align-center">
+                        <div>
+                          <h2 class="text-h4 font-weight-black">正在分析和翻译🔍</h2>
+                          <div class="text-h6">
+                            {{ docName }}
+                          </div>
+                        </div>
+                        <v-spacer></v-spacer>
+                        <v-icon v-if="expandToolBox">mdi-close</v-icon>
+
+                      </div>
+
+                      <div>
+                        <template v-if="loadingFile">
+                          <div class="text-body-2">
+                            根据上传的文件大小来说，有可能需要几分钟的时间，请耐心等待，在分析期间，请不要关闭浏览器窗口。
+                          </div>
+                          <v-progress-linear indeterminate></v-progress-linear>
+                        </template>
+                        <template v-else>
+                          <v-select v-if="pdfReady" class="mt-2" :items="['中文','原文','双语']" v-model="displayMode"></v-select>
+
+                          <div
+
+                            style="display: grid;grid-template-columns: repeat(auto-fill,12px);grid-gap: 2px"
+                          >
+                            <v-card
+                              flat
+                              tile
+                              height="12" width="12" v-for="p in displayParagraph"
+                              :color="p.translatedText?'green':(p.processing?'yellow':'white')"
+                            >
+                            </v-card>
+                          </div>
+
+                          <div class="mt-4" style="display: grid;grid-gap: 16px">
+                            <v-btn
+                              v-if="!pdfReady" size="large" color="green" @click="processPDF" :loading="isProcessing"
+                            >
+                              翻译并预览 PDF
+                            </v-btn>
+                            <v-btn
+                              v-if="pdfReady" :disabled="isProcessing" size="large" color="blue" @click="generatePdf"
+                            >
+                              下载PDF
+                            </v-btn>
+                            <v-btn @click="reset" size="large" color="blue">
+                              回到开始
+                            </v-btn>
+                          </div>
+                        </template>
+                      </div>
+                      <v-spacer></v-spacer>
+                      <div class="mt-8 text-body-1">
+                        这是翻译大王@2025 Developed by Haodong Ju & Shang
+                      </div>
+                    </div>
+
+                  </template>
+                  <template v-else>
+                    <v-icon class="mr-4">mdi-cog</v-icon>
+                    更多设置
+                  </template>
+                </v-card>
               </template>
+            </div>
 
 
-            </template>
+          </template>
 
 
-          </div>
-          <v-spacer></v-spacer>
-          <div class="mt-8 text-body-1">
-            这是翻译大王@2025 Developed by Haodong Ju & Shang
-          </div>
         </div>
+
       </div>
 
 
@@ -145,12 +234,15 @@ import '@/font.js'
 import LoginForm from "@/views/components/LoginForm.vue";
 import {useUserStore} from "@/plugins/supabase.js";
 import {createAndAnalysisFile, startTranslation} from "@/dataLayer/cloudApi.js";
+import {useDisplay} from "vuetify";
 
+const {largeAndUp} = useDisplay()
 const md = markdownit({
   linkify: true,
   breaks: true,
   typographer: true,
 })
+const expandToolBox = ref(false)
 const defaultImageRenderer = md.renderer.rules.image
 let imageDic = {}
 md.renderer.rules.image = (tokens, idx, options, env, self) => {
