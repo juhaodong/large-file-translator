@@ -7,7 +7,7 @@
         <v-card flat color="black" class="pa-3 px-8 d-flex flex-shrink-0 align-center" tile v-if="userStore.currentUser">
           PDF翻译大王👑
           <v-spacer></v-spacer>
-          <div v-if="largeAndUp" class="text-caption mr-4">
+          <div v-if="lgAndUp" class="text-caption mr-4">
             {{ userStore.currentUser.email }}
           </div>
           <v-btn @click="userStore.showAddCredit=true" color="white" flat prepend-icon="mdi-wallet">
@@ -39,7 +39,7 @@
           </div>
 
           <template v-if="file">
-            <div :style="largeAndUp?'display: grid;grid-template-columns: repeat(2,minmax(0,1fr))':''">
+            <div :style="lgAndUp?'display: grid;grid-template-columns: repeat(2,minmax(0,1fr))':''">
               <div class="bg-white flex-grow-1" style="height:calc(100vh - 64px);overflow-y:scroll;width: 100%">
                 <template v-if="displayParagraph.length===0">
                   <div class="text-h4  d-flex flex-column align-center justify-center" style="min-height: 100%">
@@ -53,9 +53,9 @@
                 </template>
                 <div ref="pdfDoc" v-else>
                   <div
-                    :class="largeAndUp?'pa-10':'pa-6'"
+                    :class="lgAndUp?'pa-10':'pa-6'"
                     class="bg-grey-lighten-5"
-                    style="min-height: 100%;width: 100%"
+                    style="min-height: 100%;width: 100%;max-width: 896px;margin: auto"
                   >
                     <v-lazy
                       :key="p.id"
@@ -82,7 +82,7 @@
                 </div>
 
               </div>
-              <div v-if="largeAndUp" class="pa-8 bg-black d-flex flex-column" style="height:calc(100vh - 64px);">
+              <div v-if="lgAndUp" class="pa-8 bg-black d-flex flex-column" style="height:calc(100vh - 64px);">
                 <h2 class="text-h4 font-weight-black">正在分析和翻译🔍</h2>
                 <div class="text-h6">
                   {{ docName }}
@@ -268,11 +268,12 @@ import {useUserStore} from "@/plugins/supabase.js";
 import {createAndAnalysisFile, startTranslation} from "@/dataLayer/cloudApi.js";
 import {useDisplay} from "vuetify";
 
-const {largeAndUp} = useDisplay()
+const {lgAndUp} = useDisplay()
 const md = markdownit({
   linkify: true,
   breaks: true,
   typographer: true,
+  html: true
 })
 const expandToolBox = ref(false)
 const defaultImageRenderer = md.renderer.rules.image
