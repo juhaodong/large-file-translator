@@ -96,20 +96,6 @@
                   </template>
                   <template v-else>
                     <v-select class="mt-2" :items="['中文','原文','双语']" v-model="displayMode"></v-select>
-
-                    <div
-
-                      style="display: grid;grid-template-columns: repeat(auto-fill,12px);grid-gap: 2px"
-                    >
-                      <v-card
-                        flat
-                        tile
-                        height="12" width="12" v-for="p in displayParagraph"
-                        :color="p.translatedText?'green':(p.processing?'yellow':'white')"
-                      >
-                      </v-card>
-                    </div>
-
                     <div class="mt-4" style="display: grid;grid-gap: 16px">
                       <v-btn v-if="!pdfReady" size="large" color="green" @click="processPDF" :loading="isProcessing">
                         翻译并预览 PDF
@@ -157,14 +143,7 @@
                       v-if="isProcessing"
                       style="display: grid;grid-template-columns: repeat(auto-fill,12px);grid-gap: 2px"
                     >
-                      <v-card
-                        v-if="!pdfReady"
-                        flat
-                        tile
-                        height="12" width="12" v-for="p in displayParagraph"
-                        :color="p.translatedText?'green':(p.processing?'yellow':'white')"
-                      >
-                      </v-card>
+                      <v-progress-linear indeterminate></v-progress-linear>
                     </div>
                     <template v-else>
                       <v-icon class="mr-4">mdi-send</v-icon>
