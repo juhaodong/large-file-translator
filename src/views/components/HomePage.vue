@@ -4,7 +4,7 @@
 
 
       <div style="width: 100%;" class="d-flex flex-column">
-        <v-card class="pa-2 px-8 d-flex flex-shrink-0 align-center" tile v-if="userStore.currentUser">
+        <v-card flat color="black" class="pa-3 px-8 d-flex flex-shrink-0 align-center" tile v-if="userStore.currentUser">
           PDF翻译大王👑
           <v-spacer></v-spacer>
           <div v-if="largeAndUp" class="text-caption mr-4">
@@ -59,7 +59,7 @@
                   >
                     <v-lazy
                       :key="p.id"
-                      v-for="p in displayParagraph" :min-height="60"
+                      v-for="p in displayParagraph" :min-height="24"
                       :options="{'threshold':0.5}"
                       transition="fade-transition"
                     >
@@ -316,17 +316,23 @@ function reset() {
 watch(file, async () => {
   docName.value = file.value.name
   loadingFile.value = true
-  const {result, document} = await createAndAnalysisFile(file.value, userStore.currentUser.id)
-  displayParagraph.length = 0
-  console.log(result, document)
-  imageDic = result?.images ?? {}
-  if (result?.output) {
-    displayParagraph.push(...document)
-    currentFileHash = document[0].fileHash
+  try {
+    const {result, document} = await createAndAnalysisFile(file.value, userStore.currentUser.id)
+    displayParagraph.length = 0
+    console.log(result, document)
+    imageDic = result?.images ?? {}
+    if (result?.output) {
+      displayParagraph.push(...document)
+      currentFileHash = document[0].fileHash
+    }
+    pdfReady.value = !displayParagraph.find(it => it.translatedText === null)
+    loadingFile.value = false
+    console.log(result)
+
+  } catch (e) {
+    console.log('失败')
+    console.log(e)
   }
-  pdfReady.value = !displayParagraph.find(it => it.translatedText === null)
-  loadingFile.value = false
-  console.log(result)
 
 })
 
