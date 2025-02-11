@@ -164,12 +164,7 @@
                         {{ infoStore.docName }}
                       </div>
                     </div>
-                    <div>
-                      <h2 class="text-h6 mb-2 font-weight-black">原文页数</h2>
-                      <div class="text-body-1 ">
-                        {{ infoStore.pageCount }}
-                      </div>
-                    </div>
+
                   </div>
 
 
