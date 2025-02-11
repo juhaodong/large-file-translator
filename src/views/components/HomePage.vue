@@ -86,10 +86,8 @@
 
             </template>
             <div class="mt-8 text-h4">
-              这是
-              <div class="bg-black" style="width: fit-content">翻译大王</div>
               <div class="text-h6">
-                @2025 by Haodong Ju & Shang
+                翻译大王.io@2025
               </div>
 
             </div>
@@ -97,13 +95,13 @@
           <template v-else>
             <div :style="lgAndUp?'display: grid;grid-template-columns: repeat(2,minmax(0,1fr))':''">
               <div
-                ref="leftContainerDom" class="flex-grow-1 bg-grey-lighten-3"
+                ref="leftContainerDom" class="flex-grow-1 bg-grey-lighten-3 d-flex flex-column justify-center"
                 style="height:calc(100vh);width: 100%"
               >
                 <div ref="pdfDocDom" class="pa-4 py-16">
                   <div
                     class="bg-white elevation-1 rounded-lg"
-                    :class="lgAndUp?'pa-8 px-12 mt-12':'pa-6'"
+                    :class="lgAndUp?'pa-8 px-12':'pa-6'"
                     style="max-width: 708px;margin: auto;height: calc(100vh - 240px);overflow-y: scroll"
                   >
                     <template v-if="infoStore.displayParagraph.length===0">
