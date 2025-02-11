@@ -1,32 +1,31 @@
 <script setup>
 import {useUserStore} from "@/plugins/supabase.js";
 import {useDisplay} from "vuetify";
-
+import logo from "@/assets/logo.png"
 const userStore = useUserStore()
+
 const {lgAndUp} = useDisplay()
 </script>
 
 <template>
   <v-card
     flat
-    color="#f6f6f6"
-    class="pa-3 px-8 mb-8 elevation-0 d-flex flex-shrink-0 align-center"
+    color="transparent"
+    class="py-3 px-0 mb-8 elevation-0 d-flex flex-shrink-0 align-center"
     rounded="lg"
     v-if="userStore.currentUser"
   >
-    PDF翻译大王👑
+    <v-img width="200" class="flex-grow-0" :src="logo"></v-img>
     <v-spacer></v-spacer>
-    <div v-if="lgAndUp" class="text-caption mr-4">
-      {{ userStore.currentUser.email }}
-    </div>
     <v-btn
       @click="userStore.showAddCredit=true"
-      color="black"
       flat
+      size="large"
       rounded="lg"
+      variant="outlined"
       prepend-icon="mdi-wallet"
     >
-      {{ userStore.currentCredit }}
+      {{ userStore.currentCredit.toFixed(2) }}
     </v-btn>
 
   </v-card>

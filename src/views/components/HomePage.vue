@@ -25,16 +25,19 @@
           >
             <user-head></user-head>
             <template v-if="file==null">
-              <div class="text-h2 font-weight-black mb-4 mt-8">
-                欢迎使用PDF翻译大王👑
+              <div class="text-h4 font-weight-black mb-2 mt-8">
+                欢迎使用PDF翻译大王
               </div>
-              <div class="text-body-1 mb-12">
+              <div class="text-body-2 mb-4">
                 几乎不限制大小(<495M)，不限制页数，好用又便宜
               </div>
               <v-file-upload
+                height="100%"
+                color="grey-lighten-5"
+                class="flex-grow-1"
                 v-if="file===null"
                 accept=".pdf"
-                title="把PDF拖到这"
+                title="把PDF拖到这里"
                 divider-text="或者说"
                 browse-text="点这里从本地上传"
                 prepend-icon=""
@@ -82,23 +85,26 @@
 
 
             </template>
-            <v-spacer></v-spacer>
             <div class="mt-8 text-h4">
               这是
-              <div class="bg-white">翻译大王</div>
-              @2025 Developed by <span class="text-body-1">Haodong Ju & Shang</span>
+              <div class="bg-black" style="width: fit-content">翻译大王</div>
+              <div class="text-h6">
+                @2025 by Haodong Ju & Shang
+              </div>
+
             </div>
           </div>
           <template v-else>
             <div :style="lgAndUp?'display: grid;grid-template-columns: repeat(2,minmax(0,1fr))':''">
-              <div ref="leftContainerDom" class="flex-grow-1" style="height:calc(100vh);overflow-y:scroll;width: 100%">
-
-
-                <div ref="pdfDocDom" class="pa-8">
+              <div
+                ref="leftContainerDom" class="flex-grow-1 bg-grey-lighten-3"
+                style="height:calc(100vh);width: 100%"
+              >
+                <div ref="pdfDocDom" class="pa-4 py-16">
                   <div
-                    class="bg-grey-lighten-4 elevation-4 rounded-lg"
-                    :class="lgAndUp?'pa-8':'pa-6'"
-                    style="min-height: 100%;width: 100%;max-width: 896px;margin: auto"
+                    class="bg-white elevation-1 rounded-lg"
+                    :class="lgAndUp?'pa-8 px-12 mt-12':'pa-6'"
+                    style="max-width: 708px;margin: auto;height: calc(100vh - 240px);overflow-y: scroll"
                   >
                     <template v-if="infoStore.displayParagraph.length===0">
                       <div
@@ -153,23 +159,12 @@
               </div>
               <div v-if="lgAndUp" class="pa-8 d-flex flex-column" style="height:calc(100vh);">
                 <user-head/>
-                <div class="px-4 ">
-                  <h2 class="text-h5 mb-4 font-weight-black">正在分析和翻译🔍</h2>
+                <div class="">
+                  <h2 class="text-h6 mb-2 mt-12 font-weight-black">文件名</h2>
                   <div class="text-body-1 mb-12">
                     {{ infoStore.docName }}
                   </div>
-                  <div class="text-h5 mb-4 font-weight-black">当前进展: {{ infoStore.fileStatus }}</div>
-                  <div class="text-caption mb-12 rounded-lg bg-grey-darken-4 pa-4">
-                    <div v-for="c in infoStore.progressConsole">
-                      {{ c }}
-                    </div>
-                  </div>
-                  <div class="text-h5 mb-4 font-weight-black">
-                    文章进度
-                  </div>
-                  <div>
-                    <v-slider @update:model-value="changeProgress" v-model="progressReading" max="100"></v-slider>
-                  </div>
+
                   <div>
                     <template v-if="loadingFile">
                       <div class="text-body-2">
@@ -178,25 +173,44 @@
                       <v-progress-linear indeterminate></v-progress-linear>
                     </template>
                     <template v-else>
-                      <v-select class="mt-2" :items="['中文','原文','双语']" v-model="displayMode"></v-select>
+                      <h2 class="text-h6 mb-2 font-weight-black">显示语言</h2>
+                      <v-select
+                        prepend-inner-icon="mdi-web" class="mt-2" :items="['中文','原文','双语']" v-model="displayMode"
+                      ></v-select>
                       <div
                         class="mt-4"
-                        style="display: grid;grid-gap: 16px;grid-template-columns: repeat(2,minmax(0,1fr));"
+                        style="display: grid;grid-gap: 16px;"
                       >
                         <v-btn
-                          size="large" color="yellow" @click="generatePdf"
+                          flat
+                          rounded="lg"
+                          color="black"
+                          prepend-icon="mdi-download"
+                          size="x-large"
+                          @click="generatePdf"
                         >
                           下载PDF
                         </v-btn>
-                        <v-btn @click="reset" size="large" color="white">
+                        <v-btn
+                          flat
+                          prepend-icon="mdi-arrow-left" @click="reset" size="x-large"
+                        >
                           翻译其他文件
                         </v-btn>
+
                       </div>
                     </template>
                   </div>
 
                 </div>
                 <v-spacer></v-spacer>
+
+                <div class="text-body-2 mb-8 rounded-lg bg-grey-lighten-5 pa-4">
+                  <div class="text-body-1 mb-2">当前进展: <b>{{ infoStore.fileStatus }}</b></div>
+                  <div v-for="c in infoStore.progressConsole">
+                    {{ c }}
+                  </div>
+                </div>
                 <div class="mt-8 text-body-1">
                   这是翻译大王@2025 Developed by Haodong Ju & Shang
                 </div>
