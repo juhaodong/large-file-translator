@@ -37,7 +37,7 @@ export async function getFileDetailByFileHash(fileHash) {
 export async function uploadPdfFile(file, userId) {
   return await hillo.postWithUploadFile(cloudUrl +
     'translation/create/file', {file, userId}, {
-    timeout: 2 * 1000
+    timeout: 15 * 60 * 1000
   })
 }
 

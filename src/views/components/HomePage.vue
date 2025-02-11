@@ -19,41 +19,74 @@
               请耐心等待片刻
             </div>
           </div>
-          <div class="pa-8 flex-grow-1 d-flex flex-column" style="height: 100vh" v-else-if="!infoStore.fileInfo">
+          <div
+            class="pa-8 flex-grow-1 d-flex flex-column" style="height: 100vh;max-width: 1600px;width: 100%;margin: auto"
+            v-else-if="!infoStore.fileInfo"
+          >
             <user-head></user-head>
-            <div class="text-h4 font-weight-black mb-4 mt-8">
-              欢迎使用PDF翻译大王👑
-            </div>
-            <div class="text-h6 mb-8">
-              不限制大小，页数，好用又便宜
-            </div>
-            <v-file-upload
-              v-if="file===null"
-              accept=".pdf"
-              title="把PDF拖到这"
-              divider-text="或者说"
-              browse-text="点这里从本地上传"
-              prepend-icon=""
-              append-inner-icon="mdi-file"
-              v-model="file"
-              label="选择 PDF 文件"
-            ></v-file-upload>
-            <template v-else-if="loadingFile">
-              <div class="text-h4">
-                ⌛ 正在上传文件
+            <template v-if="file==null">
+              <div class="text-h2 font-weight-black mb-4 mt-8">
+                欢迎使用PDF翻译大王👑
               </div>
-              <div class="text-body-1 text-center" v-if="loadingFile">
-                根据文件大小和网速情况，可能需要最长5分钟，在这个过程中，请不要关闭浏览器窗口
+              <div class="text-body-1 mb-12">
+                几乎不限制大小(<495M)，不限制页数，好用又便宜
+              </div>
+              <v-file-upload
+                v-if="file===null"
+                accept=".pdf"
+                title="把PDF拖到这"
+                divider-text="或者说"
+                browse-text="点这里从本地上传"
+                prepend-icon=""
+                append-inner-icon="mdi-file"
+                v-model="file"
+                label="选择 PDF 文件"
+              ></v-file-upload>
+            </template>
+
+            <template v-else-if="loadingFile">
+              <div class="mt-12 px-4">
+                <div class="text-h4">
+                  ⌛ 请耐心等待
+                </div>
+                <v-progress-linear
+                  indeterminate
+                  class="my-8"
+                ></v-progress-linear>
+                <div class="text-body-1">
+                  正在上传您的文件
+                </div>
+                <div class="text-body-2 mt-2">
+                  根据文件大小和网速情况，可能需要最长5分钟，在这个过程中，请不要关闭浏览器窗口
+                </div>
               </div>
             </template>
             <template v-else>
-              <div class="text-h4">
-                上传文件时发生了一些错误
+              <div class="mt-12 rounded-lg bg-red pa-8 pb-12">
+                <v-icon size="80">mdi-alert</v-icon>
+                <div class="text-h2 mt-8 font-weight-black">
+                  上传文件时发生了一些错误
+                </div>
+                <div class="text-body-1 mt-12">
+                  这可能是由于网络情况糟糕或者文件过大。
+                </div>
+                <div class="text-body-2 mt-2">
+                  请不要担心，对于这种情况，我们不会向您收取任何费用。
+                </div>
+                <div class="mt-12">
+                  <v-btn color="white" prepend-icon="mdi-refresh" @click="reset">
+                    重新选择文件并上传
+                  </v-btn>
+                </div>
               </div>
+
+
             </template>
             <v-spacer></v-spacer>
-            <div class="mt-8 text-body-1">
-              这是翻译大王@2025 Developed by Haodong Ju & Shang
+            <div class="mt-8 text-h4">
+              这是
+              <div class="bg-white">翻译大王</div>
+              @2025 Developed by <span class="text-body-1">Haodong Ju & Shang</span>
             </div>
           </div>
           <template v-else>
