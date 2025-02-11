@@ -132,11 +132,9 @@ export async function getUserInfoByToken(token) {
 
 async function init() {
   const token = localStorage.getItem("token");
-  console.log(token)
   if (token) {
     try {
       const userInfo = await getUserInfoByToken(token);
-      console.log(userInfo)
       if (userInfo) {
         await touchPoint({type: "login", token, userInfo});
       }

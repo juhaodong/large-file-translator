@@ -37,6 +37,9 @@ export const useInfoDisplayStore = defineStore('infoDisplayStore', () => {
   const docName = computed(() => {
     return fileInfo.value.fileName
   })
+  const pageCount = computed(() => {
+    return fileInfo.value?.pagesCount ?? '-'
+  })
   const fileStatus = computed(() => {
     return fileInfo.value.status ?? 'Not Exist'
   })
@@ -81,6 +84,7 @@ export const useInfoDisplayStore = defineStore('infoDisplayStore', () => {
   }
 
   return {
+    pageCount,
     fileInfo,
     fileHash,
     fileInfoLoading,

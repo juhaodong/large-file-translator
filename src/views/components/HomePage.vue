@@ -157,10 +157,21 @@
               <div v-if="lgAndUp" class="pa-8 d-flex flex-column" style="height:calc(100vh);">
                 <user-head/>
                 <div class="">
-                  <h2 class="text-h6 mb-2 mt-12 font-weight-black">文件名</h2>
-                  <div class="text-body-1 mb-12">
-                    {{ infoStore.docName }}
+                  <div class="my-12" style="display: grid;grid-template-columns: repeat(2,minmax(0,1fr))">
+                    <div>
+                      <h2 class="text-h6 mb-2 font-weight-black">文件名</h2>
+                      <div class="text-body-1 ">
+                        {{ infoStore.docName }}
+                      </div>
+                    </div>
+                    <div>
+                      <h2 class="text-h6 mb-2 font-weight-black">原文页数</h2>
+                      <div class="text-body-1 ">
+                        {{ infoStore.pageCount }}
+                      </div>
+                    </div>
                   </div>
+
 
                   <div>
                     <template v-if="loadingFile">
@@ -342,7 +353,7 @@
     </div>
     <login-form/>
     <v-dialog v-model="userStore.showAddCredit" width="min-content">
-      <v-card color="black" class="py-4" style="width: min-content" min-height="200">
+      <v-card color="black" class="py-4 px-12" rounded="xl" style="width: min-content" min-height="200">
         <stripe-buy-button
           :client-reference-id="userStore.currentUser.id"
           :customer-email="userStore.currentUser.email"
@@ -368,6 +379,7 @@
 import {ref, watch} from 'vue'
 import jsPDF from "jspdf";
 import '@/font.js'
+import '@/han-bold.js'
 import LoginForm from "@/views/components/LoginForm.vue";
 import {Remember, useUserStore} from "@/plugins/supabase.js";
 import {useDisplay} from "vuetify";
@@ -408,64 +420,75 @@ watch(file, async () => {
 })
 
 async function onFileChange() {
-  const filePlain = file.value
-  if (filePlain !== null) {
-    loadingFile.value = true
-    const fileHash = await calculateFileHash(filePlain)
-    const existInfo = await getFileDetailByFileHash(fileHash)
-    if (!existInfo) {
-      try {
-        const fileInfo = await uploadPdfFile(filePlain, userStore.currentUser.id)
-        console.log(fileInfo)
-      } catch (e) {
-        console.log('失败')
-        console.log(e)
+  if (userStore.currentCredit > 0) {
+    const filePlain = file.value
+    if (filePlain !== null) {
+      loadingFile.value = true
+      const fileHash = await calculateFileHash(filePlain)
+      const existInfo = await getFileDetailByFileHash(fileHash)
+      if (!existInfo) {
+        try {
+          const fileInfo = await uploadPdfFile(filePlain, userStore.currentUser.id)
+          console.log(fileInfo)
+        } catch (e) {
+          console.log('失败')
+          console.log(e)
 
+        }
       }
+      await infoStore.onFileHashChange(fileHash)
+      loadingFile.value = false
     }
-    await infoStore.onFileHashChange(fileHash)
-    loadingFile.value = false
+  } else {
+    userStore.showAddCredit = true
   }
+
 }
 
+const baseFontSize = 12
+const yMargin = 20
 
 function generatePdf() {
   generatingPdf.value = true
   setTimeout(() => {
-    nextTick(() => {
+    nextTick(async () => {
       try {
         const doc = new jsPDF()
+        const parser = (new DOMParser())
         doc.setFont('han')
-        let cursorY = 10;
-        cursorY = addWrappedText({
-          doc,
-          text: "本文由翻译大王翻译，翻译就用翻译大王👑！！ Developed by Haodong Ju & Shang",
-          fontSize: 14,
-          initialYPosition: cursorY,
-        })
-        cursorY += 10
+
+        let cursorY = yMargin;
         for (let i = 0; i < infoStore.displayParagraph.length; i++) {
           const p = infoStore.displayParagraph[i]
-          const baseFontSize = 14 * 0.8
-          cursorY = addWrappedText({
-            doc,
-            text: p.text,
-            fontSize: baseFontSize * 0.8,
-            initialYPosition: cursorY,
+          const html = parser.parseFromString(infoStore.renderMarkdown(p.text), "text/html").body.firstChild
+          const result = getToEnd(html)
+          const task = {
+            value: result[0],
+            tagList: result.map(n => n.nodeName)
+          }
+          if (task.tagList.find(it => it?.startsWith('H'))?.substring(1) === "1") {
+            doc.addPage()
+            cursorY = yMargin
+          }
+          cursorY = await renderOnDoc({
+            node: task, doc, initialYPosition: cursorY
           })
           if (p.translatedText && p.translatedText !== p.text) {
-            cursorY = addWrappedText({
-              doc,
-              text: p.translatedText,
-              fontSize: baseFontSize,
-              initialYPosition: cursorY,
+            const html = parser.parseFromString(infoStore.renderMarkdown(p.translatedText), "text/html").body.firstChild
+            const result = getToEnd(html)
+            cursorY = await renderOnDoc({
+              node: {
+                value: result[0],
+                tagList: result.map(n => n.nodeName)
+              }, doc, initialYPosition: cursorY
             })
           }
-
-          cursorY += 20
+          cursorY += 8
         }
-        doc.save((infoStore.docName ?? performance.now()) + '.pdf')
+        doc.save('output.pdf')
+        doc.close()
       } catch (e) {
+        console.error(e)
         showError("PDF生成失败！原因是:" + e?.message ?? '未知原因')
       }
       generatingPdf.value = false
@@ -473,6 +496,88 @@ function generatePdf() {
 
   }, 100)
 
+}
+
+async function renderOnDoc({
+                             node,
+                             doc,
+                             initialYPosition = 10,
+                           }) {
+  let cursorY = initialYPosition;
+  if (node.value.nodeName === '#text') {
+    let fontSize = baseFontSize
+
+    const headingLevel = node.tagList.find(it => it?.startsWith('H'))?.substring(1)
+    if (headingLevel) {
+      fontSize = fontSize + parseInt(7 - headingLevel) * 2
+    }
+    if (node.tagList.includes('STRONG') || node.tagList.includes('B') || node.tagList.includes('EM')) {
+      doc.setFont('han', 'bold')
+    }
+
+    cursorY = addWrappedText({
+      text: node.value.textContent,
+      doc,
+      fontSize,
+      xPosition: 10,
+      initialYPosition: cursorY,
+    })
+    doc.setFont('han', 'normal')
+    return cursorY
+  } else {
+
+    const image = node.value
+    if (!image.src.startsWith('http')) {
+      let {width, height} = await imageDimensions(image.src)
+      const aspectRatio = width / height
+      const pageHeight = doc.internal.pageSize.height - yMargin * 2;
+      const pageWidth = doc.internal.pageSize.width - 20;
+      if (width > pageWidth) {
+        width = pageWidth
+        height = width / aspectRatio
+      }
+      height = Math.min(height, pageHeight - yMargin * 2)
+      if ((height + cursorY) > pageHeight) {
+        doc.addPage()
+        cursorY = yMargin
+      }
+
+      doc.addImage(image, 10, cursorY, width, height)
+      cursorY += height
+    }
+
+    return cursorY
+  }
+
+}
+
+async function imageDimensions(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+
+    // the following handler will fire after a successful loading of the image
+    img.onload = () => {
+      const {naturalWidth: width, naturalHeight: height} = img
+      resolve({width, height})
+    }
+
+    // and this handler will fire if there was an error with the image (like if it's not really an image or a corrupted one)
+    img.onerror = () => {
+      reject('There was some problem with the image.')
+    }
+
+    img.src = src
+  })
+
+}
+
+
+function getToEnd(node, parents = []) {
+  if (node.hasChildNodes()) {
+    return getToEnd(node.firstChild, [node, ...parents])
+  } else {
+    return [node, ...parents]
+  }
 }
 
 function showError(message) {
@@ -484,20 +589,19 @@ function addWrappedText({
                           text,
                           doc,
                           fontSize = 10,
-
                           xPosition = 10,
                           initialYPosition = 10,
-                          pageWrapInitialYPosition = 10
+
                         }) {
   doc.setFontSize(fontSize);
   const textLines = doc.splitTextToSize(text, doc.internal.pageSize.width - 20); // Split the text into lines
-  const pageHeight = doc.internal.pageSize.height - 20;        // Get page height, we'll use this for auto-paging. TRANSLATE this line if using units other than `pt`
+  const pageHeight = doc.internal.pageSize.height - yMargin;        // Get page height, we'll use this for auto-paging. TRANSLATE this line if using units other than `pt`
   let cursorY = initialYPosition;
-  const lineSpacing = fontSize * 0.6;
+  const lineSpacing = fontSize * 0.55;
   textLines.forEach(lineText => {
     if (cursorY > pageHeight) { // Auto-paging
       doc.addPage();
-      cursorY = pageWrapInitialYPosition;
+      cursorY = yMargin;
     }
     doc.text(xPosition, cursorY, lineText);
     cursorY += lineSpacing;
