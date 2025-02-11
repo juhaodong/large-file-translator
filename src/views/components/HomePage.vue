@@ -33,8 +33,10 @@
               </div>
               <v-file-upload
                 height="100%"
+                rounded="xl"
                 color="grey-lighten-5"
                 class="flex-grow-1"
+
                 v-if="file===null"
                 accept=".pdf"
                 title="把PDF拖到这里"
@@ -85,12 +87,7 @@
 
 
             </template>
-            <div class="mt-8 text-h4">
-              <div class="text-h6">
-                翻译大王.io@2025
-              </div>
-
-            </div>
+            <app-footer></app-footer>
           </div>
           <template v-else>
             <div :style="lgAndUp?'display: grid;grid-template-columns: repeat(2,minmax(0,1fr))':''">
@@ -185,6 +182,7 @@
                           color="black"
                           prepend-icon="mdi-download"
                           size="x-large"
+                          :disabled="infoStore.fileStatus!=='Done'"
                           @click="generatePdf"
                         >
                           下载PDF
@@ -346,6 +344,7 @@ import {useDisplay, useGoTo} from "vuetify";
 import {calculateFileHash, getFileDetailByFileHash, uploadPdfFile} from "@/dataLayer/cloudApi.js";
 import {useInfoDisplayStore} from "@/plugins/stores/infoDisplayStore.js";
 import UserHead from "@/views/components/UserHead.vue";
+import AppFooter from "@/views/components/AppFooter.vue";
 
 const pdfDocDom = ref(null)
 const leftContainerDom = ref(null)

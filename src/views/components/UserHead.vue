@@ -15,7 +15,7 @@ const {lgAndUp} = useDisplay()
     rounded="lg"
     v-if="userStore.currentUser"
   >
-    <v-img width="200" class="flex-grow-0" :src="logo"></v-img>
+    <v-img width="160" class="flex-grow-0" :src="logo"></v-img>
     <v-spacer></v-spacer>
     <v-btn
       @click="userStore.showAddCredit=true"
