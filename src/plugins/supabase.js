@@ -1,10 +1,11 @@
 import {defineStore} from 'pinia'
 import {getCredit, loginUsingOTP, onAuthChange, sendOTPApi} from "@/dataLayer/cloudApi.js";
+import {LocalSettingManager} from "biewangle";
 
 
 export const useUserStore = defineStore('user-store', () => {
   const currentUser = ref(null)
-  const shouldShowLoginForm = ref(true)
+  const shouldShowLoginForm = ref(false)
   const formReady = ref(false)
   const currentCredit = ref(0)
   const showAddCredit = ref(false)
@@ -93,4 +94,9 @@ export const useUserStore = defineStore('user-store', () => {
     otpInput,
     login,
   }
+})
+
+
+export const Remember = LocalSettingManager.config({
+  currentFileHash: ""
 })

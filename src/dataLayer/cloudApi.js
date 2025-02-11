@@ -22,67 +22,23 @@ const touchPoint = async (event) => {
   extraHook && extraHook(event);
 };
 
-
-// 前端函数，用于监听翻译进度
-export async function startTranslation(fileHash, userId, onTranslateProgress) {
-  // 构建 SSE URL，传递 fileHash 和 userId 参数
-  const url = `${cloudUrl}translation/translate/${userId}/${(fileHash)}`;
-  const p = new Promise((resolve, reject) => {
-    const eventSource = new EventSource(url);
-
-    // 监听 'start' 事件
-    eventSource.addEventListener('start', (event) => {
-      console.log('翻译开始:', event.data);
-    });
-
-    // 监听 'progress' 事件
-    eventSource.addEventListener('progress', (event) => {
-      // 拆分返回的进度数据，例如 "documentId,status"
-      const [documentId, status] = event.data.split(',');
-      if (status === 'STARTED') {
-        onTranslateProgress({
-          id: documentId,
-          processing: true,
-        })
-      } else if (status === 'FAILED') {
-        onTranslateProgress({
-          id: documentId,
-          processing: false,
-          failed: true,
-        })
-      } else {
-        const result = status.substring(6)
-        onTranslateProgress({
-          id: documentId,
-          processing: false,
-          failed: false,
-          translatedText: result,
-        })
-      }
-    });
-    eventSource.addEventListener('complete', (event) => {
-      console.log('翻译完成:', event.data);
-      resolve()
-      eventSource.close();
-    });
-
-    // 监听 'error' 事件
-    eventSource.addEventListener('error', (event) => {
-      console.error('翻译过程中发生错误:', event.data || '服务器连接中断');
-      reject()
-      eventSource.close();
-    });
-  })
-
-  return p
-
-
+// 在浏览器环境下使用 File 对象来计算文件的 SHA-256 哈希值
+export async function calculateFileHash(file) {
+  const arrayBuffer = await file.arrayBuffer(); // 获取文件的二进制数据
+  const hashBuffer = await crypto.subtle.digest("SHA-256", arrayBuffer); // 使用 Web Crypto API 的 digest 方法计算哈希值
+  const hashArray = Array.from(new Uint8Array(hashBuffer)); // 将 ArrayBuffer 转换成字节数组
+  return hashArray.map(byte => byte.toString(16).padStart(2, '0')).join(''); // 转成 16 进制字符串并拼接起来
 }
 
+export async function getFileDetailByFileHash(fileHash) {
+  return await hillo.get(cloudUrl + "translation/findByFileHash/" + fileHash);
+}
 
-export async function createAndAnalysisFile(file, userId) {
+export async function uploadPdfFile(file, userId) {
   return await hillo.postWithUploadFile(cloudUrl +
-    'translation/create/file', {file, userId})
+    'translation/create/file', {file, userId}, {
+    timeout: 2 * 1000
+  })
 }
 
 /**

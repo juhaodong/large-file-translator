@@ -4,19 +4,19 @@
 
 
       <div style="width: 100%;" class="d-flex flex-column">
-        <v-card flat color="black" class="pa-3 px-8 d-flex flex-shrink-0 align-center" tile v-if="userStore.currentUser">
-          PDF翻译大王👑
-          <v-spacer></v-spacer>
-          <div v-if="lgAndUp" class="text-caption mr-4">
-            {{ userStore.currentUser.email }}
+        <div
+          style="height: calc(100vh - 64px)"
+          class="d-flex flex-column flex-grow-1"
+        >
+          <div class="pa-8 flex-grow-1 d-flex flex-column justify-center" v-if="infoStore.fileInfoLoading">
+            <div class="text-h3 font-weight-black mb-8">
+              正在加载文件信息....
+            </div>
+            <div class="text-h6 mb-8">
+              请耐心等待片刻
+            </div>
           </div>
-          <v-btn @click="userStore.showAddCredit=true" color="white" flat prepend-icon="mdi-wallet">
-            {{ userStore.currentCredit }}
-          </v-btn>
-
-        </v-card>
-        <div style="height: calc(100vh - 64px)" class="d-flex flex-column flex-grow-1">
-          <div class="pa-8 flex-grow-1" v-if="file==null">
+          <div class="pa-8 flex-grow-1" v-else-if="!infoStore.fileInfo">
             <div class="text-h3 font-weight-black mb-8">
               欢迎使用PDF翻译大王👑
             </div>
@@ -32,16 +32,28 @@
               :disabled="isProcessing" prepend-icon="" append-inner-icon="mdi-file" v-model="file"
               label="选择 PDF 文件"
             ></v-file-upload>
+            <template v-else-if="loadingFile.value">
+              <div class="text-h4">
+                ⌛ 正在上传文件
+              </div>
+              <div class="text-body-1 text-center" v-if="loadingFile">
+                根据文件大小和网速情况，可能需要最长5分钟，在这个过程中，请不要关闭浏览器窗口
+              </div>
+            </template>
+            <template v-else>
+              <div class="text-h4">
+                上传文件时发生了一些错误
+              </div>
+            </template>
             <v-spacer></v-spacer>
             <div class="mt-8 text-body-1">
               这是翻译大王@2025 Developed by Haodong Ju & Shang
             </div>
           </div>
-
-          <template v-if="file">
+          <template v-else>
             <div :style="lgAndUp?'display: grid;grid-template-columns: repeat(2,minmax(0,1fr))':''">
-              <div class="bg-white flex-grow-1" style="height:calc(100vh - 64px);overflow-y:scroll;width: 100%">
-                <template v-if="displayParagraph.length===0">
+              <div ref="leftContainerDom" class="flex-grow-1" style="height:calc(100vh);overflow-y:scroll;width: 100%">
+                <template v-if="infoStore.displayParagraph.length===0">
                   <div class="text-h4  d-flex flex-column align-center justify-center" style="min-height: 100%">
                     <div class="text-h4">
                       ⌛ 正在等待文件处理
@@ -51,28 +63,39 @@
                     </div>
                   </div>
                 </template>
-                <div ref="pdfDoc" v-else>
+                <div ref="pdfDocDom" class="pa-8" v-else>
                   <div
-                    :class="lgAndUp?'pa-10':'pa-6'"
-                    class="bg-grey-lighten-5"
+                    class="bg-grey-lighten-4 elevation-4 rounded-lg"
+                    :class="lgAndUp?'pa-8':'pa-6'"
                     style="min-height: 100%;width: 100%;max-width: 896px;margin: auto"
                   >
                     <v-lazy
                       :key="p.id"
-                      v-for="p in displayParagraph" :min-height="24"
+                      :id="'block'+p.id"
+                      v-for="p in infoStore.displayParagraph" :min-height="24"
                       :options="{'threshold':0.5}"
                       transition="fade-transition"
                     >
                       <div
                         class="mt-8 text-break"
                         style="width: 100%"
+                        v-intersect="{
+                       handler: (isIntersecting, entries, observer)=>
+                       onIntersect(isIntersecting, entries, observer,p.id),
+                             options: {
+                                    threshold: [1.0]
+                                  }
+                               }"
+
                       >
-                        <div v-if="displayMode==='双语'||displayMode==='原文'" v-html="renderMarkdown(p.text)"></div>
+                        <div
+                          v-if="displayMode==='双语'||displayMode==='原文'" v-html="infoStore.renderMarkdown(p.text)"
+                        ></div>
                         <div v-if="p.processing">
                           .......
                         </div>
                         <div
-                          v-html="renderMarkdown(p.translatedText)"
+                          v-html="infoStore.renderMarkdown(p.translatedText)"
                           v-if="p.translatedText&&p.translatedText!==p.text&&(displayMode!=='原文')"
                         ></div>
                       </div>
@@ -82,39 +105,78 @@
                 </div>
 
               </div>
-              <div v-if="lgAndUp" class="pa-8 bg-black d-flex flex-column" style="height:calc(100vh - 64px);">
-                <h2 class="text-h4 font-weight-black">正在分析和翻译🔍</h2>
-                <div class="text-h6">
-                  {{ docName }}
-                </div>
-                <div>
-                  <template v-if="loadingFile">
-                    <div class="text-body-2">
-                      根据上传的文件大小来说，有可能需要几分钟的时间，请耐心等待，在分析期间，请不要关闭浏览器窗口。
+              <div v-if="lgAndUp" class="pa-8 d-flex flex-column" style="height:calc(100vh);">
+                <v-card
+                  flat
+                  color="#f6f6f6"
+                  class="pa-3 px-8 mb-8 elevation-0 d-flex flex-shrink-0 align-center"
+                  rounded="lg"
+                  v-if="userStore.currentUser"
+                >
+                  PDF翻译大王👑
+                  <v-spacer></v-spacer>
+                  <div v-if="lgAndUp" class="text-caption mr-4">
+                    {{ userStore.currentUser.email }}
+                  </div>
+                  <v-btn
+                    @click="userStore.showAddCredit=true"
+                    color="black"
+                    flat
+                    rounded="lg"
+                    prepend-icon="mdi-wallet"
+                  >
+                    {{ userStore.currentCredit }}
+                  </v-btn>
+
+                </v-card>
+                <div class="px-4 ">
+                  <h2 class="text-h5 mb-4 font-weight-black">正在分析和翻译🔍</h2>
+                  <div class="text-body-1 mb-12">
+                    {{ infoStore.docName }}
+                  </div>
+                  <div class="text-h5 mb-4 font-weight-black">当前进展: {{ infoStore.fileStatus }}</div>
+                  <div class="text-caption mb-12 rounded-lg bg-grey-darken-4 pa-4">
+                    <div v-for="c in infoStore.progressConsole">
+                      {{ c }}
                     </div>
-                    <v-progress-linear indeterminate></v-progress-linear>
-                  </template>
-                  <template v-else>
-                    <v-select class="mt-2" :items="['中文','原文','双语']" v-model="displayMode"></v-select>
-                    <div class="mt-4" style="display: grid;grid-gap: 16px">
-                      <v-btn v-if="!pdfReady" size="large" color="green" @click="processPDF" :loading="isProcessing">
-                        翻译并预览 PDF
-                      </v-btn>
-                      <v-btn
-                        v-if="pdfReady" :disabled="isProcessing" size="large" color="blue" @click="generatePdf"
+                  </div>
+                  <div class="text-h5 mb-4 font-weight-black">
+                    文章进度
+                  </div>
+                  <div>
+                    <v-slider @update:model-value="changeProgress" v-model="progressReading" max="100"></v-slider>
+                  </div>
+                  <div>
+                    <template v-if="loadingFile">
+                      <div class="text-body-2">
+                        根据上传的文件大小来说，有可能需要几分钟的时间，请耐心等待，在分析期间，请不要关闭浏览器窗口。
+                      </div>
+                      <v-progress-linear indeterminate></v-progress-linear>
+                    </template>
+                    <template v-else>
+                      <v-select class="mt-2" :items="['中文','原文','双语']" v-model="displayMode"></v-select>
+                      <div
+                        class="mt-4"
+                        style="display: grid;grid-gap: 16px;grid-template-columns: repeat(2,minmax(0,1fr));"
                       >
-                        下载PDF
-                      </v-btn>
-                      <v-btn @click="reset" size="large" color="blue">
-                        回到开始
-                      </v-btn>
-                    </div>
-                  </template>
+                        <v-btn
+                          size="large" color="yellow" @click="generatePdf"
+                        >
+                          下载PDF
+                        </v-btn>
+                        <v-btn @click="reset" size="large" color="white">
+                          翻译其他文件
+                        </v-btn>
+                      </div>
+                    </template>
+                  </div>
+
                 </div>
                 <v-spacer></v-spacer>
                 <div class="mt-8 text-body-1">
                   这是翻译大王@2025 Developed by Haodong Ju & Shang
                 </div>
+
 
               </div>
               <template v-else>
@@ -238,98 +300,93 @@
 </template>
 
 <script setup>
-import markdownit from 'markdown-it'
 import {ref, watch} from 'vue'
 import jsPDF from "jspdf";
 import '@/font.js'
 import LoginForm from "@/views/components/LoginForm.vue";
 import {useUserStore} from "@/plugins/supabase.js";
-import {createAndAnalysisFile, startTranslation} from "@/dataLayer/cloudApi.js";
-import {useDisplay} from "vuetify";
+import {useDisplay, useGoTo} from "vuetify";
+import {calculateFileHash, getFileDetailByFileHash, uploadPdfFile} from "@/dataLayer/cloudApi.js";
+import {useInfoDisplayStore} from "@/plugins/stores/infoDisplayStore.js";
+
+const pdfDocDom = ref(null)
+const leftContainerDom = ref(null)
+const userStore = useUserStore()
+const infoStore = useInfoDisplayStore()
+const progressReading = ref(0)
 
 const {lgAndUp} = useDisplay()
-const md = markdownit({
-  linkify: true,
-  breaks: true,
-  typographer: true,
-  html: true
-})
 const expandToolBox = ref(false)
-const defaultImageRenderer = md.renderer.rules.image
-let imageDic = {}
-md.renderer.rules.image = (tokens, idx, options, env, self) => {
-  const src = tokens[idx].attrGet('src')
-  if (src.startsWith('_')) {
-    tokens[idx].attrSet('src', "data:image/jpg;base64," + imageDic[src])
-    tokens[idx].attrSet('style', "max-width:100%;")
+const displayMode = ref("双语")
+
+const loadingFile = ref(false)
+const file = ref(null)
+
+
+onMounted(async () => {
+  await infoStore.loadCurrentFileInfo()
+})
+let lock = false
+const goTo = useGoTo()
+
+function onIntersect(isIntersecting, entries, observer, id) {
+  const total = infoStore.displayParagraph.length
+  if (isIntersecting && !lock) {
+    const index = infoStore.displayParagraph.findIndex(p => p.id === id)
+    progressReading.value = Math.round(index / total * 100)
   }
 
-  return defaultImageRenderer(tokens, idx, options, env, self)
-};
-
-
-const displayMode = ref("双语")
-const userStore = useUserStore()
-
-const displayParagraph = reactive([]);
-const loadingFile = ref(false)
-// 新增变量：用于进度条显示
-const isProcessing = ref(false); // 控制是否显示进度条
-const file = ref(null)            // 原始PDF文件
-const pdfDoc = ref(null)
-const pdfReady = ref(false)
-const docName = ref('')
-let currentFileHash = ""
-
-function renderMarkdown(markdownText) {
-  return md.render(markdownText)
 }
 
+function changeProgress(progress) {
+  console.log(progress)
+  const total = infoStore.displayParagraph.length
+  const index = Math.round(total * progress / 100)
+  console.log(index, total)
+  if (index < total) {
+    lock = true
+    goTo('#block' + infoStore.displayParagraph[index].id, {
+      container: leftContainerDom.value,
+    })
+    setTimeout(() => {
+      lock = false
+    }, 1000)
+  }
+}
+
+
 function reset() {
-  file.value = null
-  loadingFile.value = false
-  displayParagraph.length = 0
-  pdfReady.value = false
-  displayMode.value = "双语"
+  infoStore.onFileHashChange(null)
 }
 
 watch(file, async () => {
-  docName.value = file.value.name
-  loadingFile.value = true
-  try {
-    const {result, document} = await createAndAnalysisFile(file.value, userStore.currentUser.id)
-    displayParagraph.length = 0
-    console.log(result, document)
-    imageDic = result?.images ?? {}
-    if (result?.output) {
-      displayParagraph.push(...document)
-      currentFileHash = document[0].fileHash
-    }
-    pdfReady.value = !displayParagraph.find(it => it.translatedText === null)
-    loadingFile.value = false
-    console.log(result)
-
-  } catch (e) {
-    console.log('失败')
-    console.log(e)
-  }
-
+  await onFileChange()
 })
 
+async function onFileChange() {
+  const filePlain = file.value
+  if (filePlain !== null) {
+    loadingFile.value = true
+    const fileHash = await calculateFileHash(filePlain)
+    const existInfo = await getFileDetailByFileHash(fileHash)
+    if (!existInfo) {
+      try {
+        const fileInfo = await uploadPdfFile(file.value, userStore.currentUser.id)
+        console.log(fileInfo)
+      } catch (e) {
+        console.log('失败')
+        console.log(e)
 
-// 提取 PDF 文字并调用翻译函数
-async function processPDF() {
-  isProcessing.value = true;
-  await startTranslation(currentFileHash, userStore.currentUser.id, (status) => {
-    const item = displayParagraph.find(p => parseInt(p.id) === parseInt(status.id))
-    Object.keys(status).forEach(k => {
-      item[k] = status[k]
-    })
-  })
+      }
+    }
+    await infoStore.onFileHashChange(fileHash)
+    loadingFile.value = false
 
-  pdfReady.value = true
-  isProcessing.value = false;
+
+  }
+
 }
+
 
 function generatePdf() {
   const doc = new jsPDF()
