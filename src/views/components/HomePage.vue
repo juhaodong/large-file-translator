@@ -204,7 +204,7 @@
                           flat
                           prepend-icon="mdi-arrow-left" @click="reset" size="x-large"
                         >
-                          翻译其他文件
+                          返回
                         </v-btn>
 
                       </div>
