@@ -9,7 +9,8 @@
           class="d-flex flex-column flex-grow-1"
         >
           <div
-            class="pa-8 flex-grow-1 d-flex flex-column justify-center"
+            style="max-width: 1600px;width: 100%;margin: auto"
+            class="pa-8 ml-16 pl-16 flex-grow-1 d-flex flex-column justify-center"
             v-if="infoStore.fileInfoLoading"
           >
             <div class="text-h3 font-weight-black mb-8">
@@ -50,15 +51,19 @@
             </template>
 
             <template v-else-if="loadingFile">
-              <div class="mt-12 px-4">
-                <div class="text-h4">
+              <div class="mt-12 rounded-lg pb-12">
+                <div class="text-h4 mt-8 font-weight-black">
                   ⌛ 请耐心等待
                 </div>
                 <v-progress-linear
                   indeterminate
+                  height="8"
+                  rounded="lg"
+                  rounded-bar
+                  color="#5FA8FF"
                   class="my-8"
                 ></v-progress-linear>
-                <div class="text-body-1">
+                <div class="text-body-1 mt-8">
                   正在上传您的文件
                 </div>
                 <div class="text-body-2 mt-2">
@@ -67,9 +72,9 @@
               </div>
             </template>
             <template v-else>
-              <div class="mt-12 rounded-lg bg-red pa-8 pb-12">
-                <v-icon size="80">mdi-alert</v-icon>
-                <div class="text-h2 mt-8 font-weight-black">
+              <div class="mt-12 rounded-lg pb-12">
+                <v-icon size="72" color="red">mdi-alert</v-icon>
+                <div class="text-h4 mt-8 font-weight-black">
                   上传文件时发生了一些错误
                 </div>
                 <div class="text-body-1 mt-12">
@@ -79,7 +84,10 @@
                   请不要担心，对于这种情况，我们不会向您收取任何费用。
                 </div>
                 <div class="mt-12">
-                  <v-btn color="white" prepend-icon="mdi-refresh" @click="reset">
+                  <v-btn
+                    color="black"
+                    flat prepend-icon="mdi-refresh" @click="reset"
+                  >
                     重新选择文件并上传
                   </v-btn>
                 </div>
@@ -87,6 +95,7 @@
 
 
             </template>
+            <v-spacer></v-spacer>
             <app-footer></app-footer>
           </div>
           <template v-else>
@@ -126,13 +135,6 @@
                         <div
                           class="mt-8 text-break"
                           style="width: 100%"
-                          v-intersect="{
-                       handler: (isIntersecting, entries, observer)=>
-                       onIntersect(isIntersecting, entries, observer,p.id),
-                             options: {
-                                    threshold: [1.0]
-                                  }
-                               }"
 
                         >
                           <div
@@ -180,12 +182,23 @@
                           flat
                           rounded="lg"
                           color="black"
-                          prepend-icon="mdi-download"
+                          :loading="generatingPdf||infoStore.fileStatus!=='Done'"
+                          :prepend-icon="infoStore.fileStatus==='Done'?'mdi-download':''"
                           size="x-large"
                           :disabled="infoStore.fileStatus!=='Done'"
                           @click="generatePdf"
                         >
-                          下载PDF
+                          <template v-if="infoStore.fileStatus!=='Done'">
+                            <v-progress-circular indeterminate size="18" class="mr-4"></v-progress-circular>
+                            <div class="text-capitalize">
+                              {{ infoStore.fileStatus }}
+                            </div>
+
+                          </template>
+                          <template v-else>
+                            下载PDF
+                          </template>
+
                         </v-btn>
                         <v-btn
                           flat
@@ -207,9 +220,7 @@
                     {{ c }}
                   </div>
                 </div>
-                <div class="mt-8 text-body-1">
-                  这是翻译大王@2025 Developed by Haodong Ju & Shang
-                </div>
+                <app-footer/>
 
 
               </div>
@@ -331,6 +342,15 @@
         </stripe-buy-button>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="errorDialog" max-width="600">
+      <v-card color="white" class="pa-4 py-6">
+        <div class="text-h6">错误</div>
+        <div class="text-body-1 mt-4">{{ errorMessage }}</div>
+        <div class="mt-4">
+          <v-btn @click="errorDialog=false" color="black">好的</v-btn>
+        </div>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -339,22 +359,24 @@ import {ref, watch} from 'vue'
 import jsPDF from "jspdf";
 import '@/font.js'
 import LoginForm from "@/views/components/LoginForm.vue";
-import {useUserStore} from "@/plugins/supabase.js";
-import {useDisplay, useGoTo} from "vuetify";
+import {Remember, useUserStore} from "@/plugins/supabase.js";
+import {useDisplay} from "vuetify";
 import {calculateFileHash, getFileDetailByFileHash, uploadPdfFile} from "@/dataLayer/cloudApi.js";
 import {useInfoDisplayStore} from "@/plugins/stores/infoDisplayStore.js";
 import UserHead from "@/views/components/UserHead.vue";
 import AppFooter from "@/views/components/AppFooter.vue";
 
+const errorDialog = ref(false)
+const errorMessage = ref("Error")
 const pdfDocDom = ref(null)
 const leftContainerDom = ref(null)
 const userStore = useUserStore()
 const infoStore = useInfoDisplayStore()
-const progressReading = ref(0)
 
 const {lgAndUp} = useDisplay()
 const expandToolBox = ref(false)
 const displayMode = ref("双语")
+const generatingPdf = ref(false)
 
 const loadingFile = ref(false)
 const file = ref(null)
@@ -363,35 +385,11 @@ const file = ref(null)
 onMounted(async () => {
   await infoStore.loadCurrentFileInfo()
 })
-let lock = false
-const goTo = useGoTo()
-
-function onIntersect(isIntersecting, entries, observer, id) {
-  const total = infoStore.displayParagraph.length
-  if (isIntersecting && !lock) {
-    const index = infoStore.displayParagraph.findIndex(p => p.id === id)
-    progressReading.value = Math.round(index / total * 100)
-  }
-
-}
-
-function changeProgress(progress) {
-  const total = infoStore.displayParagraph.length
-  const index = Math.round(total * progress / 100)
-  if (index < total) {
-    lock = true
-    goTo('#block' + infoStore.displayParagraph[index].id, {
-      container: leftContainerDom.value,
-    })
-    setTimeout(() => {
-      lock = false
-    }, 1000)
-  }
-}
 
 
 function reset() {
   infoStore.onFileHashChange(null)
+  Remember.currentFileHash = ""
   file.value = null
 }
 
@@ -417,45 +415,59 @@ async function onFileChange() {
     }
     await infoStore.onFileHashChange(fileHash)
     loadingFile.value = false
-
-
   }
-
 }
 
 
 function generatePdf() {
-  const doc = new jsPDF()
-  doc.setFont('han')
-  let cursorY = 10;
-  cursorY = addWrappedText({
-    doc,
-    text: "本文由翻译大王翻译，翻译就用翻译大王👑！！ Developed by Haodong Ju & Shang",
-    fontSize: 14,
-    initialYPosition: cursorY,
-  })
-  cursorY += 10
-  for (let i = 0; i < displayParagraph.length; i++) {
-    const p = displayParagraph[i]
-    const baseFontSize = 14 * 0.8
-    cursorY = addWrappedText({
-      doc,
-      text: p.text,
-      fontSize: baseFontSize * 0.8,
-      initialYPosition: cursorY,
-    })
-    if (p.translatedText && p.translatedText !== p.text) {
-      cursorY = addWrappedText({
-        doc,
-        text: p.translatedText,
-        fontSize: baseFontSize,
-        initialYPosition: cursorY,
-      })
-    }
+  generatingPdf.value = true
+  setTimeout(() => {
+    nextTick(() => {
+      try {
+        const doc = new jsPDF()
+        doc.setFont('han')
+        let cursorY = 10;
+        cursorY = addWrappedText({
+          doc,
+          text: "本文由翻译大王翻译，翻译就用翻译大王👑！！ Developed by Haodong Ju & Shang",
+          fontSize: 14,
+          initialYPosition: cursorY,
+        })
+        cursorY += 10
+        for (let i = 0; i < infoStore.displayParagraph.length; i++) {
+          const p = infoStore.displayParagraph[i]
+          const baseFontSize = 14 * 0.8
+          cursorY = addWrappedText({
+            doc,
+            text: p.text,
+            fontSize: baseFontSize * 0.8,
+            initialYPosition: cursorY,
+          })
+          if (p.translatedText && p.translatedText !== p.text) {
+            cursorY = addWrappedText({
+              doc,
+              text: p.translatedText,
+              fontSize: baseFontSize,
+              initialYPosition: cursorY,
+            })
+          }
 
-    cursorY += 20
-  }
-  doc.save((docName.value ?? performance.now()) + '.pdf')
+          cursorY += 20
+        }
+        doc.save((infoStore.docName ?? performance.now()) + '.pdf')
+      } catch (e) {
+        showError("PDF生成失败！原因是:" + e?.message ?? '未知原因')
+      }
+      generatingPdf.value = false
+    })
+
+  }, 100)
+
+}
+
+function showError(message) {
+  errorDialog.value = true
+  errorMessage.value = message
 }
 
 function addWrappedText({
