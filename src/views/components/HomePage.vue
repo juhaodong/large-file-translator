@@ -480,7 +480,7 @@ function generatePdf() {
           }
           cursorY += 8
         }
-        doc.save('output.pdf')
+        doc.save(infoStore.docName || 'output.pdf')
         doc.close()
       } catch (e) {
         console.error(e)
