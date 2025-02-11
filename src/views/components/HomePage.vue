@@ -204,7 +204,7 @@
                           flat
                           prepend-icon="mdi-arrow-left" @click="reset" size="x-large"
                         >
-                          返回
+                          返回首页
                         </v-btn>
 
                       </div>
