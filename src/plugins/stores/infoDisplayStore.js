@@ -31,7 +31,7 @@ export const useInfoDisplayStore = defineStore('infoDisplayStore', () => {
   const fileInfoLoading = ref(true)
 
   const displayParagraph = computed(() => {
-    return  fileInfo.value?.document ?? []
+    return fileInfo.value?.document ?? []
 
   })
   const docName = computed(() => {
@@ -51,11 +51,20 @@ export const useInfoDisplayStore = defineStore('infoDisplayStore', () => {
   async function loadCurrentFileInfo() {
     fileInfoLoading.value = true
     if (fileHash.value) {
-      fileInfo.value = await getFileDetailByFileHash(fileHash.value)
+      await loadIfShouldLoad()
       imageDic = fileInfo.value?.analysisResult?.images
     }
 
     fileInfoLoading.value = false
+  }
+
+
+  async function loadIfShouldLoad() {
+    fileInfo.value = await getFileDetailByFileHash(fileHash.value)
+    if (fileInfo.value && fileStatus.value !== 'Done' && fileHash.value) {
+      setTimeout(loadIfShouldLoad, 30 * 1000)
+    }
+
   }
 
   async function onFileHashChange(newFileHash) {
@@ -64,6 +73,7 @@ export const useInfoDisplayStore = defineStore('infoDisplayStore', () => {
     if (newFileHash) {
       Remember.currentFileHash = newFileHash
       await loadCurrentFileInfo()
+
     } else {
       fileInfo.value = null
     }

@@ -8,7 +8,10 @@
           style="height: calc(100vh - 64px)"
           class="d-flex flex-column flex-grow-1"
         >
-          <div class="pa-8 flex-grow-1 d-flex flex-column justify-center" v-if="infoStore.fileInfoLoading">
+          <div
+            class="pa-8 flex-grow-1 d-flex flex-column justify-center"
+            v-if="infoStore.fileInfoLoading"
+          >
             <div class="text-h3 font-weight-black mb-8">
               正在加载文件信息....
             </div>
@@ -16,8 +19,9 @@
               请耐心等待片刻
             </div>
           </div>
-          <div class="pa-8 flex-grow-1" v-else-if="!infoStore.fileInfo">
-            <div class="text-h3 font-weight-black mb-8">
+          <div class="pa-8 flex-grow-1 d-flex flex-column" style="height: 100vh" v-else-if="!infoStore.fileInfo">
+            <user-head></user-head>
+            <div class="text-h4 font-weight-black mb-4 mt-8">
               欢迎使用PDF翻译大王👑
             </div>
             <div class="text-h6 mb-8">
@@ -29,10 +33,12 @@
               title="把PDF拖到这"
               divider-text="或者说"
               browse-text="点这里从本地上传"
-              :disabled="isProcessing" prepend-icon="" append-inner-icon="mdi-file" v-model="file"
+              prepend-icon=""
+              append-inner-icon="mdi-file"
+              v-model="file"
               label="选择 PDF 文件"
             ></v-file-upload>
-            <template v-else-if="loadingFile.value">
+            <template v-else-if="loadingFile">
               <div class="text-h4">
                 ⌛ 正在上传文件
               </div>
@@ -53,33 +59,40 @@
           <template v-else>
             <div :style="lgAndUp?'display: grid;grid-template-columns: repeat(2,minmax(0,1fr))':''">
               <div ref="leftContainerDom" class="flex-grow-1" style="height:calc(100vh);overflow-y:scroll;width: 100%">
-                <template v-if="infoStore.displayParagraph.length===0">
-                  <div class="text-h4  d-flex flex-column align-center justify-center" style="min-height: 100%">
-                    <div class="text-h4">
-                      ⌛ 正在等待文件处理
-                    </div>
-                    <div class="text-body-1 text-center" v-if="loadingFile">
-                      根据文件大小和网速情况，可能需要最长5分钟，在这个过程中，请不要关闭浏览器窗口
-                    </div>
-                  </div>
-                </template>
-                <div ref="pdfDocDom" class="pa-8" v-else>
+
+
+                <div ref="pdfDocDom" class="pa-8">
                   <div
                     class="bg-grey-lighten-4 elevation-4 rounded-lg"
                     :class="lgAndUp?'pa-8':'pa-6'"
                     style="min-height: 100%;width: 100%;max-width: 896px;margin: auto"
                   >
-                    <v-lazy
-                      :key="p.id"
-                      :id="'block'+p.id"
-                      v-for="p in infoStore.displayParagraph" :min-height="24"
-                      :options="{'threshold':0.5}"
-                      transition="fade-transition"
-                    >
+                    <template v-if="infoStore.displayParagraph.length===0">
                       <div
-                        class="mt-8 text-break"
-                        style="width: 100%"
-                        v-intersect="{
+                        class="text-h4  d-flex flex-column align-center text-center justify-center"
+                        style="min-height: calc(100vh - 120px)"
+                      >
+                        <v-progress-circular indeterminate></v-progress-circular>
+                        <div class="text-h5 mt-6">
+                          ⌛ 您的文件正在后台处理中
+                        </div>
+                        <div class="text-body-2 text-center mt-2 mx-8">
+                          根据文件大小和网速情况，可能需要最长30分钟，您可以随时刷新或离开本页面。当任务结束时，我们会向您的邮箱发送邮件。
+                        </div>
+                      </div>
+                    </template>
+                    <template v-else>
+                      <v-lazy
+                        :key="p.id"
+                        :id="'block'+p.id"
+                        v-for="p in infoStore.displayParagraph" :min-height="24"
+                        :options="{'threshold':0.5}"
+                        transition="fade-transition"
+                      >
+                        <div
+                          class="mt-8 text-break"
+                          style="width: 100%"
+                          v-intersect="{
                        handler: (isIntersecting, entries, observer)=>
                        onIntersect(isIntersecting, entries, observer,p.id),
                              options: {
@@ -87,48 +100,26 @@
                                   }
                                }"
 
-                      >
-                        <div
-                          v-if="displayMode==='双语'||displayMode==='原文'" v-html="infoStore.renderMarkdown(p.text)"
-                        ></div>
-                        <div v-if="p.processing">
-                          .......
+                        >
+                          <div
+                            v-if="displayMode==='双语'||displayMode==='原文'" v-html="infoStore.renderMarkdown(p.text)"
+                          ></div>
+                          <div v-if="p.processing">
+                            .......
+                          </div>
+                          <div
+                            v-html="infoStore.renderMarkdown(p.translatedText)"
+                            v-if="p.translatedText&&p.translatedText!==p.text&&(displayMode!=='原文')"
+                          ></div>
                         </div>
-                        <div
-                          v-html="infoStore.renderMarkdown(p.translatedText)"
-                          v-if="p.translatedText&&p.translatedText!==p.text&&(displayMode!=='原文')"
-                        ></div>
-                      </div>
-                    </v-lazy>
-
+                      </v-lazy>
+                    </template>
                   </div>
                 </div>
 
               </div>
               <div v-if="lgAndUp" class="pa-8 d-flex flex-column" style="height:calc(100vh);">
-                <v-card
-                  flat
-                  color="#f6f6f6"
-                  class="pa-3 px-8 mb-8 elevation-0 d-flex flex-shrink-0 align-center"
-                  rounded="lg"
-                  v-if="userStore.currentUser"
-                >
-                  PDF翻译大王👑
-                  <v-spacer></v-spacer>
-                  <div v-if="lgAndUp" class="text-caption mr-4">
-                    {{ userStore.currentUser.email }}
-                  </div>
-                  <v-btn
-                    @click="userStore.showAddCredit=true"
-                    color="black"
-                    flat
-                    rounded="lg"
-                    prepend-icon="mdi-wallet"
-                  >
-                    {{ userStore.currentCredit }}
-                  </v-btn>
-
-                </v-card>
+                <user-head/>
                 <div class="px-4 ">
                   <h2 class="text-h5 mb-4 font-weight-black">正在分析和翻译🔍</h2>
                   <div class="text-body-1 mb-12">
@@ -249,7 +240,8 @@
 
                         <div class="mt-2" style="display: grid;grid-gap: 16px;">
                           <v-btn
-                            :disabled="isProcessing" size="large" color="white" @click="generatePdf"
+                            :disabled="infoStore.fileStatus!=='Done'"
+                            size="large" color="white" @click="generatePdf"
                           >
                             下载PDF
                           </v-btn>
@@ -308,6 +300,7 @@ import {useUserStore} from "@/plugins/supabase.js";
 import {useDisplay, useGoTo} from "vuetify";
 import {calculateFileHash, getFileDetailByFileHash, uploadPdfFile} from "@/dataLayer/cloudApi.js";
 import {useInfoDisplayStore} from "@/plugins/stores/infoDisplayStore.js";
+import UserHead from "@/views/components/UserHead.vue";
 
 const pdfDocDom = ref(null)
 const leftContainerDom = ref(null)
@@ -339,10 +332,8 @@ function onIntersect(isIntersecting, entries, observer, id) {
 }
 
 function changeProgress(progress) {
-  console.log(progress)
   const total = infoStore.displayParagraph.length
   const index = Math.round(total * progress / 100)
-  console.log(index, total)
   if (index < total) {
     lock = true
     goTo('#block' + infoStore.displayParagraph[index].id, {
@@ -357,6 +348,7 @@ function changeProgress(progress) {
 
 function reset() {
   infoStore.onFileHashChange(null)
+  file.value = null
 }
 
 watch(file, async () => {
@@ -371,7 +363,7 @@ async function onFileChange() {
     const existInfo = await getFileDetailByFileHash(fileHash)
     if (!existInfo) {
       try {
-        const fileInfo = await uploadPdfFile(file.value, userStore.currentUser.id)
+        const fileInfo = await uploadPdfFile(filePlain, userStore.currentUser.id)
         console.log(fileInfo)
       } catch (e) {
         console.log('失败')
