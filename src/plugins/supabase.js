@@ -10,7 +10,7 @@ export const useUserStore = defineStore('user-store', () => {
   const currentCredit = ref(0)
   const showAddCredit = ref(false)
   const userProjects = ref([])
-  onMounted(()=>{
+  onMounted(() => {
     onAuthChange(({event, token, userInfo}) => {
       console.log(event, token, userInfo)
       currentUser.value = userInfo
@@ -34,7 +34,7 @@ export const useUserStore = defineStore('user-store', () => {
 
   async function refreshCredit() {
 
-    if(currentUser.value){
+    if (currentUser.value) {
       const old = currentCredit.value
       currentCredit.value = await getCredit(currentUser.value.id)
       if (old !== currentCredit.value) {
@@ -66,11 +66,15 @@ export const useUserStore = defineStore('user-store', () => {
 
   async function sendOTP() {
     loading.value = true
-    const res = await sendOTPApi(emailInput.value)
-    loading.value = false
-    if (res) {
-      otpSent.value = true
+    try {
+      otpSent.value = await sendOTPApi(emailInput.value)
+
+    } catch (e) {
+
     }
+
+    loading.value = false
+
   }
 
   async function login() {

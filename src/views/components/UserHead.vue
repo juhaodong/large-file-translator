@@ -2,6 +2,7 @@
 import {useUserStore} from "@/plugins/supabase.js";
 import {useDisplay} from "vuetify";
 import logo from "@/assets/logo.png"
+
 const userStore = useUserStore()
 
 const {lgAndUp} = useDisplay()
@@ -14,11 +15,12 @@ const {lgAndUp} = useDisplay()
     :class="lgAndUp ? 'py-3' : 'pa-0'"
     class="mb-8 elevation-0 d-flex flex-shrink-0 align-center"
     rounded="lg"
-    v-if="userStore.currentUser"
+
   >
     <v-img width="160" class="flex-grow-0" :src="logo"></v-img>
     <v-spacer></v-spacer>
     <v-btn
+      v-if="userStore.currentUser"
       @click="userStore.showAddCredit=true"
       flat
       size="large"
