@@ -41,7 +41,6 @@ export const useUserStore = defineStore('user-store', () => {
   })
 
   function validateEmail(input) {
-    console.log(input)
     return String(input)
       .toLowerCase()
       .match(

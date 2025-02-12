@@ -379,9 +379,9 @@
     <login-form/>
     <v-dialog v-model="userStore.showAddCredit" width="min-content">
       <v-card
-        color="black"
+        color="white"
         :class="lgAndUp?'px-12':'px-4'"
-        class="py-4"
+        class="py-4 d-flex align-center flex-column justify-center"
         rounded="xl" style="width: min-content" min-height="200"
       >
         <stripe-buy-button
@@ -391,6 +391,15 @@
           publishable-key="pk_live_51Qo0FyEJRuEVURG7fdaxZKiQK2IE5HaGrEemR9OBHc2QY8IoLuSDxRTGYQUvmyLUZh1ia4xAAwJIHWUrUKMlcOop00X7HciJTz"
         >
         </stripe-buy-button>
+        <div class="text-body-2 my-4">或者</div>
+        <v-btn
+          @click="showRecommendDialog=true"
+          flat
+          rounded="lg"
+          color="#5ae67f"
+          prepend-icon="mdi-share"
+        >推荐给你的朋友，免费获取积分
+        </v-btn>
       </v-card>
     </v-dialog>
     <v-dialog v-model="errorDialog" max-width="600">
@@ -400,6 +409,28 @@
         <div class="mt-4">
           <v-btn @click="errorDialog=false" color="black">好的</v-btn>
         </div>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="showRecommendDialog" max-width="600">
+      <v-card rounded="xl" class="pa-4 py-6 d-flex flex-column">
+        <div class="text-h6">您的积分用光了？没有关系!</div>
+        <div class="text-body-2 mt-2">
+          将下面的链接分享给你的朋友，如果你的朋友使用该链接注册并且购买了积分，您也将获得其购买积分10%的积分奖励。
+        </div>
+        <v-card
+          @click="copyRefLink"
+          flat color="grey-lighten-3"
+          class="text-body-2 pa-4 mt-4 d-flex align-center"
+        >
+          https://fanyidawang.io?ref={{ userStore.currentUser.id }}
+          <v-spacer></v-spacer>
+          <template v-if="showOk">
+            <v-icon color="success-darken-2">mdi-check</v-icon>复制成功
+          </template>
+          <v-icon v-else>mdi-content-copy</v-icon>
+
+        </v-card>
+        <qrcode-vue class="mt-4" :size="188" :value="getRefLink()"></qrcode-vue>
       </v-card>
     </v-dialog>
   </div>
@@ -417,6 +448,7 @@ import {calculateFileHash, getFileDetailByFileHash, uploadPdfFile} from "@/dataL
 import {useInfoDisplayStore} from "@/plugins/stores/infoDisplayStore.js";
 import UserHead from "@/views/components/UserHead.vue";
 import AppFooter from "@/views/components/AppFooter.vue";
+import QrcodeVue from 'qrcode.vue'
 
 const errorDialog = ref(false)
 const errorMessage = ref("Error")
@@ -424,6 +456,7 @@ const pdfDocDom = ref(null)
 const leftContainerDom = ref(null)
 const userStore = useUserStore()
 const infoStore = useInfoDisplayStore()
+const showRecommendDialog = ref(true)
 
 const {lgAndUp} = useDisplay()
 const expandToolBox = ref(false)
@@ -433,6 +466,24 @@ const generatingPdf = ref(false)
 const loadingFile = ref(false)
 const fileRef = ref(null)
 const showDragOverlay = ref(false);
+const showOk = ref(false)
+
+function copyRefLink() {
+  try {
+    navigator.clipboard.writeText(getRefLink());
+  } catch (e) {
+
+  }
+  showOk.value = true
+  setTimeout(() => {
+    showOk.value = false
+  }, 1000)
+
+}
+
+function getRefLink() {
+  return "https://fanyidawang.io?ref=" + userStore.currentUser.id
+}
 
 let dragCounter = 0; // 使用计数器防止进入退出事件导致闪烁问题
 
@@ -468,8 +519,6 @@ function onDrop(event) {
   if (!isValid) {
     return;
   }
-
-  console.log(`文件通过验证: ${file.name}, 大小: ${(file.size / (1024 * 1024)).toFixed(2)} MB`);
   reset()
   fileRef.value = file;
 
@@ -502,8 +551,7 @@ async function onFileChange() {
       const existInfo = await getFileDetailByFileHash(fileHash)
       if (!existInfo) {
         try {
-          const fileInfo = await uploadPdfFile(filePlain, userStore.currentUser.id)
-          console.log(fileInfo)
+          await uploadPdfFile(filePlain, userStore.currentUser.id);
         } catch (e) {
           console.log('失败')
           console.log(e)
