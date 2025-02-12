@@ -14,7 +14,11 @@ const userStore = useUserStore()
         <div class="text-caption mt-4">
           请输入刚刚我们发送到{{ userStore.emailInput }}的6位数字，请注意，有效期为60分钟。如果您不小心输入了错误的邮箱，请点击返回按钮。
         </div>
-        <v-otp-input autofocus v-model="userStore.otpInput" @finish="userStore.login()"></v-otp-input>
+        <v-otp-input
+          :error="userStore.otpError"
+          autofocus v-model="userStore.otpInput"
+          @finish="userStore.login()"
+        ></v-otp-input>
         <v-btn @click="userStore.reset()" color="white">回到上一步</v-btn>
       </template>
       <template v-else>

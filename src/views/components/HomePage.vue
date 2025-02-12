@@ -399,10 +399,9 @@
         <stripe-buy-button
           :client-reference-id="userStore.currentUser.id"
           :customer-email="userStore.currentUser.email"
-          buy-button-id="buy_btn_1Qo52dEJRuEVURG7VrJH3LwX"
+          buy-button-id="buy_btn_1Qrjq8EJRuEVURG7a1N7u3zk"
           publishable-key="pk_live_51Qo0FyEJRuEVURG7fdaxZKiQK2IE5HaGrEemR9OBHc2QY8IoLuSDxRTGYQUvmyLUZh1ia4xAAwJIHWUrUKMlcOop00X7HciJTz"
-        >
-        </stripe-buy-button>
+        />
         <div class="text-body-2 my-4">或者</div>
         <v-btn
           @click="showRecommendDialog=true"
