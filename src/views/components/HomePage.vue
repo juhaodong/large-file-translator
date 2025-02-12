@@ -418,6 +418,7 @@
           将下面的链接分享给你的朋友，如果你的朋友使用该链接注册并且购买了积分，您也将获得其购买积分10%的积分奖励。
         </div>
         <v-card
+          v-if="userStore.currentUser"
           @click="copyRefLink"
           flat color="grey-lighten-3"
           class="text-body-2 pa-4 mt-4 d-flex align-center"
@@ -425,12 +426,13 @@
           https://fanyidawang.io?ref={{ userStore.currentUser.id }}
           <v-spacer></v-spacer>
           <template v-if="showOk">
-            <v-icon color="success-darken-2">mdi-check</v-icon>复制成功
+            <v-icon color="success-darken-2">mdi-check</v-icon>
+            复制成功
           </template>
           <v-icon v-else>mdi-content-copy</v-icon>
 
         </v-card>
-        <qrcode-vue class="mt-4" :size="188" :value="getRefLink()"></qrcode-vue>
+        <qrcode-vue v-if="userStore.currentUser" class="mt-4" :size="188" :value="getRefLink()"></qrcode-vue>
       </v-card>
     </v-dialog>
   </div>
@@ -456,7 +458,7 @@ const pdfDocDom = ref(null)
 const leftContainerDom = ref(null)
 const userStore = useUserStore()
 const infoStore = useInfoDisplayStore()
-const showRecommendDialog = ref(true)
+const showRecommendDialog = ref(false)
 
 const {lgAndUp} = useDisplay()
 const expandToolBox = ref(false)
