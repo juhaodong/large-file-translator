@@ -349,20 +349,11 @@
                     下载
                   </v-btn>
                 </v-card>
-
-
               </template>
             </div>
-
-
           </template>
-
-
         </div>
-
       </div>
-
-
     </div>
     <login-form/>
     <v-dialog v-model="userStore.showAddCredit" width="min-content">
