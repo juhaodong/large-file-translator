@@ -10,11 +10,15 @@ export const useUserStore = defineStore('user-store', () => {
   const currentCredit = ref(0)
   const showAddCredit = ref(false)
   const userProjects = ref([])
-  onAuthChange(({event, token, userInfo}) => {
-    currentUser.value = userInfo
-    shouldShowLoginForm.value = token === null
-    refreshUserInfo()
+  onMounted(()=>{
+    onAuthChange(({event, token, userInfo}) => {
+      console.log(event, token, userInfo)
+      currentUser.value = userInfo
+      shouldShowLoginForm.value = token === null
+      refreshUserInfo()
+    })
   })
+
 
   async function refreshUserInfo() {
     if (currentUser.value) {

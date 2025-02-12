@@ -47,9 +47,11 @@ export async function uploadPdfFile(file, userId) {
  * @param {function} authEventHook - 接收 { type: "login" | "logout", token, userInfo } 格式的事件
  */
 export function onAuthChange(authEventHook) {
+
   if (typeof authEventHook === "function") {
     extraHook = authEventHook;
   }
+  init()
 }
 
 
@@ -143,7 +145,9 @@ async function init() {
       console.log('auto login failed, token outdated or network error')
     }
 
+  } else {
+    await touchPoint({type: "logout", token: null});
   }
 }
 
-init()
+
