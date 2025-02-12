@@ -347,6 +347,15 @@
                   >
                     <v-icon>mdi-wallet</v-icon>
                   </v-btn>
+                  <v-btn
+                    icon
+                    color="transparent"
+                    @click="infoStore.showExtraInfo=true"
+                    rounded="xl"
+                    flat
+                  >
+                    <v-icon>mdi- mdi-information-outline</v-icon>
+                  </v-btn>
                   <div style="width: 12px"></div>
                   <div class="d-flex text-body-2" v-if="infoStore.fileStatus!=='Done'">
                     {{ infoStore.fileStatus }}

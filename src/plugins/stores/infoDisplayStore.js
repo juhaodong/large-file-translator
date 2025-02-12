@@ -9,6 +9,7 @@ export const useInfoDisplayStore = defineStore('infoDisplayStore', () => {
   const fileInfo = ref(null)
   const defaultFileHash = IKUtils.getQueryString("fileUrl") || Remember.currentFileHash
   const fileHash = ref(defaultFileHash)
+  const showExtraInfo = ref(false)
   let imageDic = {}
   const md = markdownit({
     linkify: true,
@@ -97,6 +98,7 @@ export const useInfoDisplayStore = defineStore('infoDisplayStore', () => {
     displayParagraph,
     fileStatus,
     imageDic,
+    showExtraInfo,
     docName,
     progressConsole,
     onFileHashChange,
