@@ -61,11 +61,15 @@ export const useInfoDisplayStore = defineStore('infoDisplayStore', () => {
     fileInfoLoading.value = false
   }
 
+  let loadCount = 0
 
   async function loadIfShouldLoad() {
     fileInfo.value = await getFileDetailByFileHash(fileHash.value)
     if (fileInfo.value && fileStatus.value !== 'Done' && fileHash.value) {
-      setTimeout(loadIfShouldLoad, 30 * 1000)
+      setTimeout(loadIfShouldLoad, Math.max(Math.random() * (10 + loadCount) * 1000), 1000)
+      loadCount++
+    } else {
+      loadCount = 0
     }
 
   }

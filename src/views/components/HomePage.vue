@@ -495,7 +495,8 @@ function generatePdf() {
           }
           cursorY += 8
         }
-        doc.save(infoStore.docName || 'output.pdf')
+        doc.save(infoStore.docName.replace(/\.pdf$/i, '(CN).pdf')
+          || 'output.pdf')
         doc.close()
       } catch (e) {
         console.error(e)
