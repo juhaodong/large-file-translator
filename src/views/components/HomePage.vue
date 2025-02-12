@@ -122,7 +122,9 @@
           <template v-else>
             <div :style="lgAndUp?'display: grid;grid-template-columns: repeat(2,minmax(0,1fr))':''">
               <div
-                ref="leftContainerDom" class="flex-grow-1 bg-grey-lighten-3 d-flex flex-column justify-center"
+                ref="leftContainerDom"
+                class="flex-grow-1 bg-grey-lighten-3 d-flex flex-column justify-center"
+                :class="lgAndUp?'px-8':''"
                 style="height:calc(100vh);width: 100%"
               >
                 <div ref="pdfDocDom">
@@ -662,7 +664,7 @@ async function renderOnDoc({
   } else {
 
     const image = node.value
-    if (!image.src.startsWith('http')) {
+    if (image.src && !image.src.startsWith('http')) {
       let {width, height} = await imageDimensions(image.src)
       const aspectRatio = width / height
       const pageHeight = doc.internal.pageSize.height - yMargin * 2;
