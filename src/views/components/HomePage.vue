@@ -517,25 +517,28 @@ function onDragLeave() {
 function onDrop(event) {
   dragCounter = 0; // 放置文件后重置计数器
   showDragOverlay.value = false;
+  try {
+    const files = event.dataTransfer.files;
 
-  const files = event.dataTransfer.files;
+    // 检查是否仅拖入了一个文件
+    if (files.length !== 1) {
+      showError("一次只能上传一个文件！");
+      return;
+    }
 
-  // 检查是否仅拖入了一个文件
-  if (files.length !== 1) {
-    showError("一次只能上传一个文件！");
-    return;
+    const file = files[0]; // 获取单个文件
+
+    // 调用校验函数进行文件验证
+    const isValid = validateFile(file);
+
+    if (!isValid) {
+      return;
+    }
+    reset()
+    fileRef.value = file;
+  } catch (e) {
+    console.log(e)
   }
-
-  const file = files[0]; // 获取单个文件
-
-  // 调用校验函数进行文件验证
-  const isValid = validateFile(file);
-
-  if (!isValid) {
-    return;
-  }
-  reset()
-  fileRef.value = file;
 
 
 }
@@ -561,19 +564,23 @@ async function onFileChange() {
   if (userStore.currentCredit > 0) {
     const filePlain = fileRef.value
     if (filePlain !== null) {
-      loadingFile.value = true
-      const fileHash = await calculateFileHash(filePlain)
-      const existInfo = await getFileDetailByFileHash(fileHash)
-      if (!existInfo) {
-        try {
-          await uploadPdfFile(filePlain, userStore.currentUser.id);
-        } catch (e) {
-          console.log('失败')
-          console.log(e)
+      try {
+        loadingFile.value = true
+        const fileHash = await calculateFileHash(filePlain)
+        const existInfo = await getFileDetailByFileHash(fileHash)
+        if (!existInfo) {
 
+          await uploadPdfFile(filePlain, userStore.currentUser.id);
         }
+
+        await infoStore.onFileHashChange(fileHash)
+
+      } catch (e) {
+
+        console.log('失败')
+        console.log(e)
+
       }
-      await infoStore.onFileHashChange(fileHash)
       loadingFile.value = false
     }
   } else {
