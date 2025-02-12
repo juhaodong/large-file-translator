@@ -33,11 +33,15 @@ export const useUserStore = defineStore('user-store', () => {
   }
 
   async function refreshCredit() {
-    const old = currentCredit.value
-    currentCredit.value = await getCredit(currentUser.value.id)
-    if (old !== currentCredit.value) {
-      showAddCredit.value = false
+
+    if(currentUser.value){
+      const old = currentCredit.value
+      currentCredit.value = await getCredit(currentUser.value.id)
+      if (old !== currentCredit.value) {
+        showAddCredit.value = false
+      }
     }
+
   }
 
   onMounted(() => {

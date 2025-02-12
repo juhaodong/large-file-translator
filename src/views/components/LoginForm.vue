@@ -6,7 +6,7 @@ const userStore = useUserStore()
 
 <template>
   <v-dialog v-model="userStore.shouldShowLoginForm" max-width="600" persistent>
-    <v-card class="pa-6 d-flex flex-column justify-center align-center text-center" width="100%">
+    <v-card rounded="xl" class="pa-6 d-flex flex-column justify-center align-center text-center" width="100%">
       <div class="text-h6">
         登录/注册
       </div>
@@ -25,14 +25,15 @@ const userStore = useUserStore()
           <v-form v-model="userStore.formReady">
             <v-text-field
               style="width: 100%"
-              class="mt-2" :rules="[userStore.validateEmail]" validate-on="blur" v-model="userStore.emailInput"
+              class="mt-2" :rules="[userStore.validateEmail]" validate-on="input blur" v-model="userStore.emailInput"
             ></v-text-field>
           </v-form>
         </div>
 
         <v-btn
           block
-          color="white" size="large" @click="userStore.sendOTP()" :disabled="!userStore.formReady"
+          rounded="xl"
+          color="black" size="x-large" @click="userStore.sendOTP()" :disabled="!userStore.formReady"
           :loading="userStore.loading"
         >
           登录/注册
