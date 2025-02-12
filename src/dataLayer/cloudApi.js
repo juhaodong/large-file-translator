@@ -1,7 +1,7 @@
 import hillo from "hillo";
 
-// const cloudUrl = "https://cloud-v2.aaden.io/";
-const cloudUrl = "http://localhost/";
+const cloudUrl = "https://cloud-v2.aaden.io/";
+// const cloudUrl = "http://localhost/";
 
 let extraHook = null;
 

@@ -366,7 +366,12 @@
     </div>
     <login-form/>
     <v-dialog v-model="userStore.showAddCredit" width="min-content">
-      <v-card color="black" class="py-4 px-12" rounded="xl" style="width: min-content" min-height="200">
+      <v-card
+        color="black"
+        :class="lgAndUp?'px-12':'px-4'"
+        class="py-4"
+        rounded="xl" style="width: min-content" min-height="200"
+      >
         <stripe-buy-button
           :client-reference-id="userStore.currentUser.id"
           :customer-email="userStore.currentUser.email"
