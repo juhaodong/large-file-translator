@@ -3,10 +3,12 @@ import markdownit from "markdown-it";
 import {defineStore} from 'pinia'
 import {getFileDetailByFileHash} from "@/dataLayer/cloudApi.js";
 import {markdownItTable} from "markdown-it-table";
+import IKUtils from "innerken-js-utils";
 
 export const useInfoDisplayStore = defineStore('infoDisplayStore', () => {
   const fileInfo = ref(null)
-  const fileHash = ref(Remember.currentFileHash)
+  const defaultFileHash = IKUtils.getQueryString("fileUrl") || Remember.currentFileHash
+  const fileHash = ref(defaultFileHash)
   let imageDic = {}
   const md = markdownit({
     linkify: true,
