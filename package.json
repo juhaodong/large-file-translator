@@ -16,6 +16,7 @@
     "html2pdf.js": "^0.10.2",
     "innerken-js-utils": "^2.0.3",
     "jspdf": "^2.5.2",
+    "lodash-es": "^4.17.21",
     "markdown-it": "^14.1.0",
     "markdown-it-table": "^4.1.1",
     "openai": "^4.82.0",

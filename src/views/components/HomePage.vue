@@ -1,5 +1,26 @@
 <template>
-  <div class="fill-height">
+  <div
+    @dragover.prevent
+    @dragenter.prevent="onDragEnter"
+    @dragleave.prevent="onDragLeave"
+    @drop.prevent="onDrop"
+    class="fill-height"
+  >
+    <div
+      v-if="showDragOverlay"
+      class="drag-overlay"
+    >
+      <div class="drag-overlay-content">
+        <v-icon size="72" color="grey lighten-2">mdi-cloud-upload</v-icon>
+        <div class="text-h4 mt-4 font-weight-black">
+          将文件拖到这里以上传
+        </div>
+        <div class="text-body-1 mt-2">
+          支持拖拽多种文件，例如 PDF
+        </div>
+      </div>
+    </div>
+
     <div>
       <div style="width: 100%;" class="d-flex flex-column">
         <div
@@ -25,7 +46,7 @@
             v-else-if="!infoStore.fileInfo"
           >
             <user-head></user-head>
-            <template v-if="file==null">
+            <template v-if="fileRef==null">
               <div class="text-h4 font-weight-black mb-2 mt-8">
                 欢迎使用PDF翻译大王
               </div>
@@ -38,14 +59,14 @@
                 color="grey-lighten-5"
                 class="flex-grow-1"
 
-                v-if="file===null"
+                v-if="fileRef===null"
                 accept=".pdf"
                 title="把PDF拖到这里"
                 divider-text="或者说"
                 browse-text="点这里从本地上传"
                 prepend-icon=""
                 append-inner-icon="mdi-file"
-                v-model="file"
+                v-model="fileRef"
                 label="选择 PDF 文件"
               ></v-file-upload>
             </template>
@@ -410,7 +431,50 @@ const displayMode = ref("双语")
 const generatingPdf = ref(false)
 
 const loadingFile = ref(false)
-const file = ref(null)
+const fileRef = ref(null)
+const showDragOverlay = ref(false);
+
+let dragCounter = 0; // 使用计数器防止进入退出事件导致闪烁问题
+
+function onDragEnter() {
+  dragCounter++; // 每次进入增加计数
+  showDragOverlay.value = true; // 显示覆盖层
+}
+
+function onDragLeave() {
+  dragCounter--; // 每次离开减少计数
+  if (dragCounter === 0) {
+    showDragOverlay.value = false; // 仅在拖拽完全离开时隐藏覆盖层
+  }
+}
+
+function onDrop(event) {
+  dragCounter = 0; // 放置文件后重置计数器
+  showDragOverlay.value = false;
+
+  const files = event.dataTransfer.files;
+
+  // 检查是否仅拖入了一个文件
+  if (files.length !== 1) {
+    showError("一次只能上传一个文件！");
+    return;
+  }
+
+  const file = files[0]; // 获取单个文件
+
+  // 调用校验函数进行文件验证
+  const isValid = validateFile(file);
+
+  if (!isValid) {
+    return;
+  }
+
+  console.log(`文件通过验证: ${file.name}, 大小: ${(file.size / (1024 * 1024)).toFixed(2)} MB`);
+  reset()
+  fileRef.value = file;
+
+
+}
 
 
 onMounted(async () => {
@@ -421,17 +485,17 @@ onMounted(async () => {
 function reset() {
   infoStore.onFileHashChange(null)
   Remember.currentFileHash = ""
-  file.value = null
+  fileRef.value = null
   expandToolBox.value = false
 }
 
-watch(file, async () => {
+watch(fileRef, async () => {
   await onFileChange()
 })
 
 async function onFileChange() {
   if (userStore.currentCredit > 0) {
-    const filePlain = file.value
+    const filePlain = fileRef.value
     if (filePlain !== null) {
       loadingFile.value = true
       const fileHash = await calculateFileHash(filePlain)
@@ -582,6 +646,24 @@ async function imageDimensions(src) {
 
 }
 
+function validateFile(file) {
+  const fileType = file.type;
+  const fileSize = file.size / (1024 * 1024); // 转换为 MB
+
+  // 验证文件类型
+  if (fileType !== "application/pdf") {
+    showError(`${file.name} 不是一个有效的 PDF 文件！`);
+    return false;
+  }
+
+  // 验证文件大小
+  if (fileSize > 495) {
+    showError(`${file.name} 文件大小超过了 495MB 的限制！`);
+    return false;
+  }
+
+  return true; // 文件通过校验
+}
 
 function getToEnd(node, parents = []) {
   if (node.hasChildNodes()) {
@@ -657,5 +739,25 @@ div#wave {
     transform: translateY(-2px);
   }
 }
+
+.drag-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 9999;
+}
+
+.drag-overlay-content {
+  text-align: center;
+  color: #fff;
+  user-select: none;
+}
+
 
 </style>
