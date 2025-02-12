@@ -128,8 +128,9 @@
                 <div ref="pdfDocDom">
                   <div
                     class="bg-white elevation-1 rounded-lg"
-                    :class="lgAndUp?'pa-8 px-12':'px-4'"
-                    :style="lgAndUp?'height: calc(100vh - 240px);max-width: 708px;margin: auto;':'height: calc(100vh)'"
+                    :class="lgAndUp?'pa-8 px-12':'px-4 pb-16'"
+                    :style="lgAndUp?'height: calc(100vh - 240px);max-width: 708px;margin: auto;':
+                    'height: calc(100vh);padding-bottom: 120px;'"
                     style="overflow-y: scroll"
                   >
                     <template v-if="infoStore.displayParagraph.length===0">
@@ -171,7 +172,7 @@
                           ></div>
                         </div>
                       </v-lazy>
-                      <app-footer v-if="!lgAndUp"/>
+                      <app-footer class="mb-16" v-if="!lgAndUp"/>
                     </template>
                   </div>
                 </div>
