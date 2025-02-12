@@ -1,8 +1,6 @@
 <template>
   <div class="fill-height">
     <div>
-
-
       <div style="width: 100%;" class="d-flex flex-column">
         <div
           style="height: calc(100vh - 64px)"
@@ -10,7 +8,8 @@
         >
           <div
             style="max-width: 1600px;width: 100%;margin: auto"
-            class="pa-8 ml-16 pl-16 flex-grow-1 d-flex flex-column justify-center"
+            class="pa-8  flex-grow-1 d-flex flex-column justify-center"
+            :class="lgAndUp?'ml-16 pl-16':'mt-12'"
             v-if="infoStore.fileInfoLoading"
           >
             <div class="text-h3 font-weight-black mb-8">
@@ -21,7 +20,8 @@
             </div>
           </div>
           <div
-            class="pa-8 flex-grow-1 d-flex flex-column" style="height: 100vh;max-width: 1600px;width: 100%;margin: auto"
+            class="pa-8 flex-grow-1 d-flex flex-column"
+            style="height: 100vh;max-width: 1600px;width: 100%;margin: auto"
             v-else-if="!infoStore.fileInfo"
           >
             <user-head></user-head>
@@ -104,11 +104,12 @@
                 ref="leftContainerDom" class="flex-grow-1 bg-grey-lighten-3 d-flex flex-column justify-center"
                 style="height:calc(100vh);width: 100%"
               >
-                <div ref="pdfDocDom" class="pa-4 py-16">
+                <div ref="pdfDocDom">
                   <div
                     class="bg-white elevation-1 rounded-lg"
-                    :class="lgAndUp?'pa-8 px-12':'pa-6'"
-                    style="max-width: 708px;margin: auto;height: calc(100vh - 240px);overflow-y: scroll"
+                    :class="lgAndUp?'pa-8 px-12':'px-4'"
+                    :style="lgAndUp?'height: calc(100vh - 240px);max-width: 708px;margin: auto;':'height: calc(100vh)'"
+                    style="overflow-y: scroll"
                   >
                     <template v-if="infoStore.displayParagraph.length===0">
                       <div
@@ -149,6 +150,7 @@
                           ></div>
                         </div>
                       </v-lazy>
+                      <app-footer v-if="!lgAndUp"/>
                     </template>
                   </div>
                 </div>
@@ -241,98 +243,114 @@
 
               </div>
               <template v-else>
-                <template v-if="loadingFile">
-                  <v-card
-                    style="position: fixed;right: 5%;bottom: 5%;width: 90%"
-                    class="pa-6 px-6 text-h6" rounded="xl" color="black"
-                  >
-                    <h2 class="text-h4 font-weight-black">正在分析和翻译🔍</h2>
-                    <div class="text-body-1 mb-4">
-                      {{ docName }}
-                    </div>
+                <v-bottom-sheet v-model="expandToolBox">
+                  <v-card @click.stop style="width: 100%" color="white" class="pa-4">
+
                     <div class="text-body-2 mb-4">
-                      根据上传的文件大小来说，有可能需要几分钟的时间，请耐心等待，在分析期间，请不要关闭浏览器窗口。
+                      <div class="text-h6 font-weight-black">
+                        正在显示
+                      </div>
+                      {{ infoStore.docName }}
                     </div>
-                    <v-progress-linear indeterminate></v-progress-linear>
-                  </v-card>
-                </template>
-                <template v-else-if="!pdfReady">
-                  <v-card
-                    @click="processPDF"
-                    style="position: fixed;right: 5%;bottom: 5%;width: 90%"
-                    class="pa-4 px-6 text-h6" rounded="xl" color="black"
-                  >
-                    <div
-                      v-if="isProcessing"
-                      style="display: grid;grid-template-columns: repeat(auto-fill,12px);grid-gap: 2px"
-                    >
-                      <v-progress-linear indeterminate></v-progress-linear>
-                    </div>
-                    <template v-else>
-                      <v-icon class="mr-4">mdi-send</v-icon>
-                      翻译并预览 PDF
-                    </template>
-
-
-                  </v-card>
-                </template>
-                <v-card
-                  v-else
-                  @click="expandToolBox=!expandToolBox"
-                  style="position: fixed;right: 5%;bottom: 5%;"
-                  :style="expandToolBox?'width:90%':''"
-                  class="pa-4 px-6 d-flex align-center text-h6" rounded="xl" color="black"
-                >
-
-
-                  <template v-if="expandToolBox">
-                    <div @click.stop style="width: 100%" class="pa-4">
-                      <div>
-                        <div class="text-h6 font-weight-black">
-                          正在显示
+                    <div class="text-body-2 mb-6 rounded-lg bg-grey-lighten-3 pa-4">
+                      <div class="text-body-1 mb-2 d-flex">
+                        当前进展: <b>{{ infoStore.fileStatus }}</b>
+                        <div id="wave" v-if="infoStore.fileStatus!=='Done'">
+                          <span class="dot"></span>
+                          <span class="dot"></span>
+                          <span class="dot"></span>
                         </div>
-                        <v-card
-                          @click="reset"
-                          class="text-body-2 text-truncate d-flex align-center mb-4 pa-2 bg-grey-darken-3"
-                          style="width: 100%"
+                      </div>
+                      <div style="max-height: 150px;overflow-y: auto">
+                        <div v-for="c in infoStore.progressConsole">
+                          {{ c }}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+
+                      <v-select
+                        prepend-inner-icon="mdi-web"
+                        class="mt-2" :items="['中文','原文','双语']" v-model="displayMode"
+                      ></v-select>
+
+                      <div
+                        class="mt-2" style="display: grid;grid-gap: 16px;grid-template-columns: repeat(2,minmax(0,1fr))"
+                      >
+                        <v-btn
+                          flat
+                          prepend-icon="mdi-arrow-left"
+                          @click="expandToolBox=false"
+                          size="large"
                         >
-                          <v-icon>mdi-file-document</v-icon>
-                          <div class="mx-2 flex-grow-1 text-truncate">{{ docName }}</div>
-                          <v-icon>mdi-close</v-icon>
-                        </v-card>
-                      </div>
-
-                      <div>
-
-                        <v-select
-                          class="mt-2" :items="['中文','原文','双语']" v-model="displayMode"
-                        ></v-select>
-
-                        <div class="mt-2" style="display: grid;grid-gap: 16px;">
-                          <v-btn
-                            :disabled="infoStore.fileStatus!=='Done'"
-                            size="large" color="white" @click="generatePdf"
-                          >
-                            下载PDF
-                          </v-btn>
-                        </div>
-
-                      </div>
-                      <v-spacer></v-spacer>
-                      <div class="mt-8 text-caption">
-                        这是翻译大王@2025 Developed by Haodong Ju & Shang
-                      </div>
-                      <div class=" text-center" @click="expandToolBox=false">
-                        <v-icon size="small">mdi-close</v-icon>
+                          返回
+                        </v-btn>
+                        <v-btn
+                          flat
+                          color="black"
+                          prepend-icon="mdi-home"
+                          size="large"
+                          rounded="lg"
+                          @click="reset"
+                        >
+                          返回首页
+                        </v-btn>
                       </div>
                     </div>
-
-                  </template>
-                  <template v-else>
-                    <v-icon class="mr-4">mdi-cog</v-icon>
-                    更多设置
-                  </template>
+                  </v-card>
+                </v-bottom-sheet>
+                <v-card
+                  v-if="!expandToolBox"
+                  elevation="8"
+                  color="white"
+                  class="d-flex px-4 py-2 align-center"
+                  style="position: fixed;bottom: 0;width: 100%;"
+                >
+                  <v-btn
+                    icon
+                    color="transparent"
+                    @click="expandToolBox=!expandToolBox"
+                    rounded="xl"
+                    flat
+                  >
+                    <v-icon>mdi-cog</v-icon>
+                  </v-btn>
+                  <v-btn
+                    icon
+                    color="transparent"
+                    @click="userStore.showAddCredit=true"
+                    rounded="xl"
+                    flat
+                  >
+                    <v-icon>mdi-wallet</v-icon>
+                  </v-btn>
+                  <div style="width: 12px"></div>
+                  <div class="d-flex text-body-2" v-if="infoStore.fileStatus!=='Done'">
+                    {{ infoStore.fileStatus }}
+                    <div id="wave">
+                      <span class="dot"></span>
+                      <span class="dot"></span>
+                      <span class="dot"></span>
+                    </div>
+                  </div>
+                  <v-spacer></v-spacer>
+                  <v-btn
+                    @click="generatePdf"
+                    v-if="!expandToolBox"
+                    :loading="generatingPdf||infoStore.fileStatus!=='Done'"
+                    prepend-icon="mdi-download"
+                    size="x-large"
+                    flat
+                    color="grey-lighten-3"
+                    :disabled="infoStore.fileStatus!=='Done'"
+                    rounded="xl"
+                  >
+                    下载
+                  </v-btn>
                 </v-card>
+
+
               </template>
             </div>
 
@@ -408,6 +426,7 @@ function reset() {
   infoStore.onFileHashChange(null)
   Remember.currentFileHash = ""
   file.value = null
+  expandToolBox.value = false
 }
 
 watch(file, async () => {

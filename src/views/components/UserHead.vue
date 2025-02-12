@@ -11,7 +11,8 @@ const {lgAndUp} = useDisplay()
   <v-card
     flat
     color="transparent"
-    class="py-3 px-0 mb-8 elevation-0 d-flex flex-shrink-0 align-center"
+    :class="lgAndUp ? 'py-3' : 'pa-0'"
+    class="mb-8 elevation-0 d-flex flex-shrink-0 align-center"
     rounded="lg"
     v-if="userStore.currentUser"
   >
