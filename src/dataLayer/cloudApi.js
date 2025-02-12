@@ -1,4 +1,5 @@
 import hillo from "hillo";
+import IKUtils from "innerken-js-utils";
 
 const cloudUrl = "https://cloud-v2.aaden.io/";
 // const cloudUrl = "http://localhost/";
@@ -108,7 +109,7 @@ export async function logout() {
  */
 export async function sendOTPApi(email) {
   try {
-    await hillo.jsonPost(cloudUrl + "user/sendOTP/" + email, {email: email});
+    await hillo.jsonPost(cloudUrl + "user/sendOTP", {email: email, refUserId: IKUtils.getQueryString("ref") || ''});
     return true;
   } catch (e) {
     console.error(e);

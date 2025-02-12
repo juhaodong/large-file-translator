@@ -63,7 +63,6 @@ export const useUserStore = defineStore('user-store', () => {
     if (res) {
       otpSent.value = true
     }
-
   }
 
   async function login() {
