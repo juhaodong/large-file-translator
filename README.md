@@ -1,8 +1,6 @@
 # 翻译大王
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)  
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/juhaodong/large-file-translator)  
-[![Powered by OpenAI](https://img.shields.io/badge/Powered%20by-OpenAI-blueviolet)](https://openai.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/juhaodong/large-file-translator)[![Powered by OpenAI](https://img.shields.io/badge/Powered%20by-OpenAI-blueviolet)](https://openai.com/)
 
 🚀 **翻译大王** 是一款专为 **PDF 文档** 设计的 **高效翻译软件**，支持 **超大型 PDF 文件**，并在 **保留原排版** 的基础上提供
 **精准翻译**。无需安装，即开即用，适合 **学术研究、商业办公、个人学习** 等各种场景。
