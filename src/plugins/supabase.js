@@ -8,8 +8,9 @@ export const useUserStore = defineStore('user-store', () => {
   const shouldShowLoginForm = ref(false)
   const formReady = ref(false)
   const currentCredit = ref(0)
-  const showAddCredit = ref(true)
-  const otpError = ref('')
+  const showAddCredit = ref(false)
+  const otpError = ref(null)
+
   onMounted(() => {
     onAuthChange(({event, token, userInfo}) => {
       console.log(event, token, userInfo)
@@ -79,10 +80,13 @@ export const useUserStore = defineStore('user-store', () => {
 
   async function login() {
     try {
+      loading.value = true
       await loginUsingOTP(emailInput.value, otpInput.value)
     } catch (e) {
       otpError.value = "haveError"
+      otpInput.value = ''
     }
+    loading.value = false
 
   }
 
