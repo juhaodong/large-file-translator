@@ -1,79 +1,99 @@
-# Vuetify (Default)
+# 翻译大王
 
-This is the official scaffolding tool for Vuetify, designed to give you a head start in building your new Vuetify application. It sets up a base template with all the necessary configurations and standard directory structure, enabling you to begin development without the hassle of setting up the project from scratch.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)  
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/juhaodong/large-file-translator)
+[![Powered by OpenAI](https://img.shields.io/badge/Powered%20by-OpenAI-blueviolet)](https://openai.com/)
 
-## ❗️ Important Links
+**翻译大王** 是一款专为 PDF 文档设计的快速翻译软件，致力于在保留原文排版的基础上，实现高效、精准的翻译体验。无需下载安装，只需通过网页应用即可享受所有强大功能，无需任何技术背景，即开箱即用！
 
-- 📄 [Docs](https://vuetifyjs.com/)
-- 🚨 [Issues](https://issues.vuetifyjs.com/)
-- 🏬 [Store](https://store.vuetifyjs.com/)
-- 🎮 [Playground](https://play.vuetifyjs.com/)
-- 💬 [Discord](https://community.vuetifyjs.com)
+---
 
-## 💿 Install
+## 在线 Demo
 
-Set up your project using your preferred package manager. Use the corresponding command to install the dependencies:
+立即体验 [翻译大王](https://fanyidawang.io) —— 也许是目前性价比最好、最简单易用的 PDF 文件翻译工具！
 
-| Package Manager                                                | Command        |
-|---------------------------------------------------------------|----------------|
-| [yarn](https://yarnpkg.com/getting-started)                   | `yarn install` |
-| [npm](https://docs.npmjs.com/cli/v7/commands/npm-install)     | `npm install`  |
-| [pnpm](https://pnpm.io/installation)                          | `pnpm install` |
-| [bun](https://bun.sh/#getting-started)                        | `bun install`  |
+---
 
-After completing the installation, your environment is ready for Vuetify development.
+## 核心功能与亮点
 
-## ✨ Features
+1. **🚀 一键快速翻译，无文件大小限制**
+    - **支持超大型 PDF 文件**：高效处理，告别大小限制，节省翻译时间。
+    - **先进 AI 技术加持**：基于 GPT-4 等大模型，翻译结果精准流畅，贴近原文语境。
 
-- 🖼️ **Optimized Front-End Stack**: Leverage the latest Vue 3 and Vuetify 3 for a modern, reactive UI development experience. [Vue 3](https://v3.vuejs.org/) | [Vuetify 3](https://vuetifyjs.com/en/)
-- 🗃️ **State Management**: Integrated with [Pinia](https://pinia.vuejs.org/), the intuitive, modular state management solution for Vue.
-- 🚦 **Routing and Layouts**: Utilizes Vue Router for SPA navigation and vite-plugin-vue-layouts for organizing Vue file layouts. [Vue Router](https://router.vuejs.org/) | [vite-plugin-vue-layouts](https://github.com/JohnCampionJr/vite-plugin-vue-layouts)
-- ⚡ **Next-Gen Tooling**: Powered by Vite, experience fast cold starts and instant HMR (Hot Module Replacement). [Vite](https://vitejs.dev/)
-- 🧩 **Automated Component Importing**: Streamline your workflow with unplugin-vue-components, automatically importing components as you use them. [unplugin-vue-components](https://github.com/antfu/unplugin-vue-components)
+2. **🎨 自动识别多种格式**
+    - **内置 OCR 功能**：可识别扫描版 PDF 及图片文字，覆盖更多使用场景。
+    - **兼容复杂排版**：完美支持学术论文、技术手册等含有公式、图表的文件。
 
-These features are curated to provide a seamless development experience from setup to deployment, ensuring that your Vuetify application is both powerful and maintainable.
+3. **🖼️ 保留原版格式**
+    - **排版不变**：翻译后文档的排版、图片、表格与原版一致，无需额外调整。
+    - **多字体适配**：支持手写体、特殊字体，满足多场景需求。
 
-## 💡 Usage
+4. **🧑‍💻 开箱即用，无需繁琐操作**
+    - **三步完成翻译**：上传 → 自动处理 → 下载，简单高效。
+    - **无需注册或登录**：界面友好，一键上手，适合所有用户。
 
-This section covers how to start the development server and build your project for production.
+---
+## 使用场景
 
-### Starting the Development Server
+- **📚 学术研究**  
+  快速翻译外文论文、技术文档，保留公式和图表排版，提升文献阅读效率。
 
-To start the development server with hot-reload, run the following command. The server will be accessible at [http://localhost:3000](http://localhost:3000):
+- **💼 商业办公**  
+  将多语言合同、报告转换为中文，确保内容与格式完全对应，避免人工翻译时格式错乱。
 
-```bash
-yarn dev
-```
+- **📖 个人学习**  
+  翻译外文电子书、学习资料，支持扫描版教材，让语言障碍不再成为学习瓶颈。
 
-(Repeat for npm, pnpm, and bun with respective commands.)
+---
 
-> Add NODE_OPTIONS='--no-warnings' to suppress the JSON import warnings that happen as part of the Vuetify import mapping. If you are on Node [v21.3.0](https://nodejs.org/en/blog/release/v21.3.0) or higher, you can change this to NODE_OPTIONS='--disable-warning=5401'. If you don't mind the warning, you can remove this from your package.json dev script.
+## 技术优势
 
-### Building for Production
+- **✅ AI 深度优化**  
+  采用多模态模型，同时处理文本、图片和版式信息，实现更智能的翻译效果。
 
-To build your project for production, use:
+- **✅ 极致性能**  
+  优化算法支持处理 500+ 页超大文件，平均速度提升 3 倍以上。
 
-```bash
-yarn build
-```
+- **✅ 隐私保护**  
+  文件处理完成后自动删除，全程数据加密，确保您的文档安全无忧。
 
-(Repeat for npm, pnpm, and bun with respective commands.)
+---
+## 功能对比
 
-Once the build process is completed, your application will be ready for deployment in a production environment.
+下表对比了翻译大王与其他常见翻译方案在关键功能上的表现：
 
-## 💪 Support Vuetify Development
+| 功能              | 翻译大王                             | CLI 工具                    | DeepL                       | 直接使用 ChatGPT             |
+|-----------------|----------------------------------|---------------------------|-----------------------------|--------------------------|
+| **PDF 智能识别 📄** | ✔ 自动解析 PDF 内的文本、图片、表格等所有元素       | △ 部分自动解析，部分格式可能需手动调整      | ✘ 无法直接处理 PDF，需手动复制文本        | ✘ 无法直接解析 PDF，需手动复制文本     |
+| **高质量翻译 💬**    | ✔ 基于 GPT-4 等大模型，语境优化、表达自然流畅      | ✔ 依赖现有翻译 API，翻译稳定但上下文优化有限 | ✔ 翻译质量高，但表达较为标准化            | ✔ 基于 GPT-4，质量优异，但需逐段处理   |
+| **排版保留 🎨**     | ✔ 保留原文排版与格式                      | ✘ 通常不保留复杂排版               | ✘ 格式丢失，需后期手动调整              | ✘ 格式不保留，需手动整理            |
+| **大文件支持 💾**    | ✔ 针对超大型 PDF 进行优化，处理速度快           | △ 处理大文件时可能受限于工具自身的限制      | ✘ 文件大小有限制                   | ✘ Token 限制，难以处理长文档       |
+| **使用方式 🔧**     | ✔ 在线网页应用，即点即用，无需任何背景知识           | △ 需命令行操作，要求一定的技术背景        | ✔ 网页服务，适合文本翻译，但不支持复杂文档      | △ 交互式对话，需手动分段复制文本        |
+| **用户体验 😊**     | ✔ 专为 PDF 翻译设计，界面友好直观，可直接在线预览翻译效果 | △ 面向开发者，命令行操作对非技术用户不够友好   | △ 界面友好，但缺乏直接处理 PDF 的自动化支持   | △ 交互式体验，但不适用于批量或复杂文档翻译   |
+| **价格 💲**       | 1 欧元/1000 页（约 7.8 元/1000 页）      | 免费，但是需要自己研究               | $24.99/月，仅支持 20 个文档，且文件大小受限 | $20/月 Plus 版，但受 token 限制 |
 
-This project is built with [Vuetify](https://vuetifyjs.com/en/), a UI Library with a comprehensive collection of Vue components. Vuetify is an MIT licensed Open Source project that has been made possible due to the generous contributions by our [sponsors and backers](https://vuetifyjs.com/introduction/sponsors-and-backers/). If you are interested in supporting this project, please consider:
 
-- [Requesting Enterprise Support](https://support.vuetifyjs.com/)
-- [Sponsoring John on Github](https://github.com/users/johnleider/sponsorship)
-- [Sponsoring Kael on Github](https://github.com/users/kaelwd/sponsorship)
-- [Supporting the team on Open Collective](https://opencollective.com/vuetify)
-- [Becoming a sponsor on Patreon](https://www.patreon.com/vuetify)
-- [Becoming a subscriber on Tidelift](https://tidelift.com/subscription/npm/vuetify)
-- [Making a one-time donation with Paypal](https://paypal.me/vuetify)
 
-## 📑 License
-[MIT](http://opensource.org/licenses/MIT)
+## 开源代码
 
-Copyright (c) 2016-present Vuetify, LLC
+本项目的源代码托管在 GitHub 上，欢迎访问并参与贡献：
+
+[https://github.com/juhaodong/large-file-translator](https://github.com/juhaodong/large-file-translator)
+
+---
+
+## 贡献与支持
+
+我们欢迎所有形式的贡献与反馈。如果您有任何建议或发现问题，请在 [GitHub Issues](https://github.com/juhaodong/large-file-translator/issues) 提出。
+
+---
+
+## 社区与讨论
+
+- 加入我们的 [讨论区](https://github.com/juhaodong/large-file-translator/discussions) 一起交流使用经验与建议。
+
+
+
+---
+
+**探索更多功能，发现翻译大王如何为您的文档处理带来革命性变革！**
