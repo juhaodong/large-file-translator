@@ -120,7 +120,7 @@ async function doPayment(priceId) {
     if (userStore.currentUser != null) {
       const session = await generatePaymentUrl(priceId, userStore.currentUser.id)
       console.log(session)
-      window.open(session.url, '_blank')
+      location.href = session.url
     }
   } catch (e) {
 
