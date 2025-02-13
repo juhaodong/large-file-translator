@@ -421,7 +421,7 @@
         <v-btn
           @click="submitPDf" size="large" class="mt-4" flat color="#5ae67f" v-if="userStore.currentCredit>numPages"
         >
-          消耗{{ numPages }}积分进行翻译
+          开始翻译
         </v-btn>
         <v-btn class="mt-4" flat color="grey-lighten-4" @click="userStore.showAddCredit=true;reset()" v-else>
           您的积分不足，请充值
@@ -556,7 +556,8 @@ async function submitPDf() {
   try {
     await uploadPdfFile(fileRef.value, userStore.currentUser.id)
     await infoStore.onFileHashChange(fileHash)
-    if (numPages.value > 10) {
+    if (numPages.value > 10 && !Remember.emailConfirmed) {
+      Remember.emailConfirmed = true
       showInfo(
         "现在正在后台处理中，您可以随时离开本页面，" +
         "在翻译完成后，我们会向您的邮箱发送一份邮件", "文件上传成功")

@@ -38,7 +38,7 @@
           @click="showRecommendDialog=true"
           flat
           rounded="lg"
-          color="#5ae67f"
+          color="#5FA8FF"
           prepend-icon="mdi-share"
         >推荐给你的朋友，免费获取积分
         </v-btn>

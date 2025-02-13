@@ -118,7 +118,8 @@ export const useUserStore = defineStore('user-store', () => {
 
 
 export const Remember = LocalSettingManager.config({
-  currentFileHash: ""
+  currentFileHash: "",
+  emailConfirmed: false
 })
 
 export function formatFileSize(file) {
