@@ -449,6 +449,7 @@ import UserHead from "@/views/components/UserHead.vue";
 import AppFooter from "@/views/components/AppFooter.vue";
 import PaymentStripe from "@/views/components/PaymentStripe.vue";
 import * as pdfjsLib from 'pdfjs-dist';
+import { inject } from "@vercel/analytics"
 
 
 const errorDialog = ref(false)
@@ -501,6 +502,7 @@ function onDrop(event) {
 
 
 onMounted(async () => {
+  inject()
   await infoStore.loadCurrentFileInfo()
 })
 
