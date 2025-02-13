@@ -419,7 +419,7 @@
         </div>
 
         <v-btn
-          @click="submitPDf" size="large" class="mt-4" flat color="#5FA8FF" v-if="userStore.currentCredit>numPages"
+          @click="submitPDf" size="large" class="mt-4" flat color="black" v-if="userStore.currentCredit>numPages"
         >
           开始翻译
         </v-btn>
