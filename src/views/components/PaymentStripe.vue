@@ -128,7 +128,7 @@ async function doPayment(priceId) {
   try {
     if (userStore.currentUser != null) {
       const session = await generatePaymentUrl(priceId, userStore.currentUser.id)
-      console.log(session)
+      // console.log(session)
       location.href = session.url
     }
   } catch (e) {
