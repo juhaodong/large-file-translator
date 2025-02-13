@@ -448,7 +448,7 @@ import UserHead from "@/views/components/UserHead.vue";
 import AppFooter from "@/views/components/AppFooter.vue";
 import PaymentStripe from "@/views/components/PaymentStripe.vue";
 import * as pdfjsLib from 'pdfjs-dist';
-import { inject } from "@vercel/analytics"
+import {inject} from "@vercel/analytics"
 
 
 const errorDialog = ref(false)
@@ -595,6 +595,16 @@ const yMargin = 20
 
 function generatePdf() {
   generatingPdf.value = true
+  try {
+    const isWechat = navigator.userAgent.toLowerCase().indexOf('micromessenger') !== -1
+    if (isWechat) {
+      showError("您目前使用的是微信内置浏览器，无法下载文件，请切换到外部浏览器打开（右上角）")
+      return
+    }
+  } catch (e) {
+    showError("您目前的浏览器不支持直接下载PDF")
+    return
+  }
   setTimeout(() => {
     nextTick(async () => {
       try {
