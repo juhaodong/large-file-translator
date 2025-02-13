@@ -2,7 +2,7 @@
   <v-dialog v-model="userStore.showAddCredit" max-width="600">
     <v-card
       color="white"
-      :class="lgAndUp?'px-12':'px-4 py-4'"
+      :class="lgAndUp?'pa-4 py-8':'px-4 py-4'"
       class="py-4 d-flex align-center flex-column justify-center"
       rounded="xl" style="" min-height="200"
     >
@@ -22,9 +22,15 @@
               class="pa-4 px-6 d-flex" width="100%"
               flat :key="p.id" v-for="p in availablePriceIds"
             >
-              <div class="text-body-1 font-weight-black">
-                {{ p.pageCount }}页
+              <div>
+                <div class="text-body-1 font-weight-black">
+                  {{ p.pageCount }}页
+                </div>
+                <div v-if="p.note" class="text-caption text-green-darken-2 rounded font-weight-black">
+                  {{ p.note }}
+                </div>
               </div>
+
               <v-spacer></v-spacer>
               <div>
                 {{ p.price }}€(~￥{{ (p.price * 7.8).toFixed(2) }})
@@ -84,15 +90,18 @@ import {ref} from "vue";
 const showRecommendDialog = ref(false)
 const showOk = ref(false)
 const {lgAndUp} = useDisplay()
-const availablePriceIds = ref([{
-  id: 'price_1QrxR3EJRuEVURG7NrfqCRkP',
-  price: 1,
-  pageCount: 100
-}, {
-  id: 'price_1QrxUoEJRuEVURG7q4peTJvr',
-  price: 3.99,
-  pageCount: 500
-}])
+const availablePriceIds = ref([
+  {id: 'price_1Qs8QJEJRuEVURG7BsmE9npR', price: 1.99, pageCount: 100},
+  {
+    id: 'price_1Qs8KlEJRuEVURG78euTkGfW',
+    price: 4.99,
+    pageCount: 500
+  }, {
+    id: 'price_1Qs8McEJRuEVURG7xILUIe55',
+    price: 9.99,
+    pageCount: 1200,
+    note: '节省20%'
+  }])
 const userStore = useUserStore()
 const loading = ref(false)
 
