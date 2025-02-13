@@ -259,7 +259,7 @@
                       <span class="dot"></span>
                     </div>
                   </div>
-                  <div style="max-height: 150px;overflow-y: auto">
+                  <div style="max-height: 64px;overflow-y: auto">
                     <div v-for="c in infoStore.progressConsole">
                       {{ c }}
                     </div>
