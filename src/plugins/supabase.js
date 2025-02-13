@@ -8,7 +8,7 @@ export const useUserStore = defineStore('user-store', () => {
   const shouldShowLoginForm = ref(false)
   const formReady = ref(false)
   const currentCredit = ref(0)
-  const showAddCredit = ref(false)
+  const showAddCredit = ref(true)
   const otpError = ref('')
   onMounted(() => {
     onAuthChange(({event, token, userInfo}) => {
@@ -116,3 +116,37 @@ export const useUserStore = defineStore('user-store', () => {
 export const Remember = LocalSettingManager.config({
   currentFileHash: ""
 })
+
+export function formatFileSize(file) {
+  const fileSizeInBytes = file.size; // 从 File 对象获取文件大小（字节）
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  let index = 0;
+  let fileSize = fileSizeInBytes;
+
+  // 循环将大小单位从 B 转换为更大的单位，直到 < 1024
+  while (fileSize >= 1024 && index < units.length - 1) {
+    fileSize /= 1024;
+    index++;
+  }
+
+  // 格式化为两位小数，并添加单位
+  return `${fileSize.toFixed(2)} ${units[index]}`;
+}
+
+export function calculateUploadTime(file, uploadSpeed = 500 * 1024) {
+  // 上传速度默认为 500 KB/s (要转换为字节：500 * 1024)
+  const fileSizeInBytes = file.size; // 获取文件大小 (字节)
+
+  // 计算耗时，单位为秒
+  const timeInSeconds = fileSizeInBytes / uploadSpeed;
+
+  // 转换为友好的格式：分钟和秒
+  const minutes = Math.floor(timeInSeconds / 60);
+  const seconds = Math.ceil(timeInSeconds % 60);
+
+  if (minutes > 0) {
+    return `${minutes} 分 ${seconds} 秒`;
+  } else {
+    return `${seconds} 秒`;
+  }
+}

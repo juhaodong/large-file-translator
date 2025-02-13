@@ -23,13 +23,16 @@ const userStore = useUserStore()
       </template>
       <template v-else>
         <div class="text-caption mt-2">
-          你得有个账户才能使用，因为AI翻译要花钱成本太高了，我们暂时没有钱来让你免费试用。
+          你得有个账户才能使用，在登陆后，我们会送您20页翻译额度，您可以免费试用F。
         </div>
         <div style="width:100%">
           <v-form v-model="userStore.formReady">
             <v-text-field
+              placeholder="Email"
               style="width: 100%"
-              class="mt-2" :rules="[userStore.validateEmail]" validate-on="input blur" v-model="userStore.emailInput"
+              class="mt-2" :rules="[userStore.validateEmail]"
+              validate-on="input eager"
+              v-model="userStore.emailInput"
             ></v-text-field>
           </v-form>
         </div>

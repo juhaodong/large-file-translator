@@ -24,7 +24,7 @@
     <div>
       <div style="width: 100%;" class="d-flex flex-column">
         <div
-          style="height: calc(100vh - 64px)"
+          style="height: calc(100vh)" A
           class="d-flex flex-column flex-grow-1"
         >
           <div
@@ -92,6 +92,9 @@
                 </div>
               </div>
             </template>
+            <template v-else-if="showPDFInfo">
+              <div></div>
+            </template>
             <template v-else>
               <div class="mt-12 rounded-lg pb-12">
                 <v-icon size="72" color="red">mdi-alert</v-icon>
@@ -113,8 +116,6 @@
                   </v-btn>
                 </div>
               </div>
-
-
             </template>
             <v-spacer></v-spacer>
             <app-footer></app-footer>
@@ -174,7 +175,10 @@
                           ></div>
                         </div>
                       </v-lazy>
-                      <app-footer class="mb-16" v-if="!lgAndUp"/>
+                      <div v-if="!lgAndUp" class="pb-16">
+                        <app-footer class="pb-16"/>
+                      </div>
+
                     </template>
                   </div>
                 </div>
@@ -276,22 +280,6 @@
                       </div>
                       {{ infoStore.docName }}
                     </div>
-                    <div class="text-body-2 mb-6 rounded-lg bg-grey-lighten-3 pa-4">
-                      <div class="text-body-1 mb-2 d-flex">
-                        当前进展: <b>{{ infoStore.fileStatus }}</b>
-                        <div id="wave" v-if="infoStore.fileStatus!=='Done'">
-                          <span class="dot"></span>
-                          <span class="dot"></span>
-                          <span class="dot"></span>
-                        </div>
-                      </div>
-                      <div style="max-height: 150px;overflow-y: auto">
-                        <div v-for="c in infoStore.progressConsole">
-                          {{ c }}
-                        </div>
-                      </div>
-                    </div>
-
                     <div>
 
                       <v-select
@@ -324,6 +312,28 @@
                     </div>
                   </v-card>
                 </v-bottom-sheet>
+                <v-bottom-sheet v-model="showConsole">
+                  <v-card>
+                    <div class="text-body-2 rounded-lg  pa-4">
+                      <div class="text-body-1 mb-2 d-flex">
+                        当前进展: <b>{{ infoStore.fileStatus }}</b>
+                        <div id="wave" v-if="infoStore.fileStatus!=='Done'">
+                          <span class="dot"></span>
+                          <span class="dot"></span>
+                          <span class="dot"></span>
+                        </div>
+                      </div>
+                      <div style="max-height: 150px;overflow-y: auto" class="bg-grey-lighten-3 pa-2 rounded">
+                        <div v-for="c in infoStore.progressConsole">
+                          {{ c }}
+                        </div>
+                      </div>
+                      <div class="mt-4">
+                        <v-btn @click="showConsole=false" color="black">好的</v-btn>
+                      </div>
+                    </div>
+                  </v-card>
+                </v-bottom-sheet>
                 <v-card
                   v-if="!expandToolBox"
                   elevation="8"
@@ -343,15 +353,6 @@
                   <v-btn
                     icon
                     color="transparent"
-                    @click="userStore.showAddCredit=true"
-                    rounded="xl"
-                    flat
-                  >
-                    <v-icon>mdi-wallet</v-icon>
-                  </v-btn>
-                  <v-btn
-                    icon
-                    color="transparent"
                     @click="infoStore.showExtraInfo=true"
                     rounded="xl"
                     flat
@@ -359,7 +360,7 @@
                     <v-icon>mdi- mdi-information-outline</v-icon>
                   </v-btn>
                   <div style="width: 12px"></div>
-                  <div class="d-flex text-body-2" v-if="infoStore.fileStatus!=='Done'">
+                  <div class="d-flex text-body-2" @click="showConsole=true" v-if="infoStore.fileStatus!=='Done'">
                     {{ infoStore.fileStatus }}
                     <div id="wave">
                       <span class="dot"></span>
@@ -389,65 +390,48 @@
       </div>
     </div>
     <login-form/>
-    <v-dialog v-model="userStore.showAddCredit" width="min-content">
-      <v-card
-        color="white"
-        :class="lgAndUp?'px-12':'px-4'"
-        class="py-4 d-flex align-center flex-column justify-center"
-        rounded="xl" style="width: min-content" min-height="200"
-      >
-        <stripe-buy-button
-          v-if="userStore.currentUser"
-          :client-reference-id="userStore.currentUser.id"
-          :customer-email="userStore.currentUser.email"
-          buy-button-id="buy_btn_1Qo52dEJRuEVURG7VrJH3LwX"
-          publishable-key="pk_live_51Qo0FyEJRuEVURG7fdaxZKiQK2IE5HaGrEemR9OBHc2QY8IoLuSDxRTGYQUvmyLUZh1ia4xAAwJIHWUrUKMlcOop00X7HciJTz"
-        >
-        </stripe-buy-button>
-        <div class="text-body-2 my-4">或者</div>
-        <v-btn
-          @click="showRecommendDialog=true"
-          flat
-          rounded="lg"
-          color="#5ae67f"
-          prepend-icon="mdi-share"
-        >推荐给你的朋友，免费获取积分
-        </v-btn>
-      </v-card>
-    </v-dialog>
+
+    <payment-stripe></payment-stripe>
+
     <v-dialog v-model="errorDialog" max-width="600">
       <v-card color="white" class="pa-4 py-6">
-        <div class="text-h6">错误</div>
+        <div class="text-h6">{{ messageHeader }}</div>
         <div class="text-body-1 mt-4">{{ errorMessage }}</div>
         <div class="mt-4">
           <v-btn @click="errorDialog=false" color="black">好的</v-btn>
         </div>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="showRecommendDialog" max-width="600">
-      <v-card rounded="xl" class="pa-4 py-6 d-flex flex-column">
-        <div class="text-h6">您的积分用光了？没有关系!</div>
-        <div class="text-body-2 mt-2">
-          将下面的链接分享给你的朋友，如果你的朋友使用该链接注册并且购买了积分，您也将获得其购买积分10%的积分奖励。
+    <v-dialog persistent v-model="showPDFInfo" max-width="600">
+      <v-card color="white" class="pa-4 py-6" rounded="xl">
+        <div class="text-body-1 mb-4">您选择的文件</div>
+        <div class="text-body-2">
+          {{ fileName }}
         </div>
-        <v-card
-          v-if="userStore.currentUser"
-          @click="copyRefLink"
-          flat color="grey-lighten-3"
-          class="text-body-2 pa-4 mt-4 d-flex align-center"
-        >
-          https://fanyidawang.io?ref={{ userStore.currentUser.id }}
-          <v-spacer></v-spacer>
-          <template v-if="showOk">
-            <v-icon color="success-darken-2">mdi-check</v-icon>
-            复制成功
-          </template>
-          <v-icon v-else>mdi-content-copy</v-icon>
+        <div class="text-body-2">
+          {{ pdfSize }}
+        </div>
+        <div class="text-body-2">
+          页数：{{ numPages }}
+        </div>
+        <div class="text-body-2">
+          预计上传耗时：{{ uploadEstimateTime }}
+        </div>
 
-        </v-card>
-        <qrcode-vue v-if="userStore.currentUser" class="mt-4" :size="188" :value="getRefLink()"></qrcode-vue>
+        <v-btn
+          @click="submitPDf" size="large" class="mt-4" flat color="#5ae67f" v-if="userStore.currentCredit>numPages"
+        >
+          消耗{{ numPages }}积分进行翻译
+        </v-btn>
+        <v-btn class="mt-4" flat color="grey-lighten-4" @click="userStore.showAddCredit=true;reset()" v-else>
+          您的积分不足，请充值
+        </v-btn>
+        <v-btn color="grey-lighten-4" flat class="mt-2" @click="showPDFInfo=false;reset()">
+          取消
+        </v-btn>
       </v-card>
     </v-dialog>
+
   </div>
 </template>
 
@@ -457,21 +441,25 @@ import jsPDF from "jspdf";
 import '@/font.js'
 import '@/han-bold.js'
 import LoginForm from "@/views/components/LoginForm.vue";
-import {Remember, useUserStore} from "@/plugins/supabase.js";
+import {calculateUploadTime, formatFileSize, Remember, useUserStore} from "@/plugins/supabase.js";
 import {useDisplay} from "vuetify";
 import {calculateFileHash, getFileDetailByFileHash, uploadPdfFile} from "@/dataLayer/cloudApi.js";
 import {useInfoDisplayStore} from "@/plugins/stores/infoDisplayStore.js";
 import UserHead from "@/views/components/UserHead.vue";
 import AppFooter from "@/views/components/AppFooter.vue";
-import QrcodeVue from 'qrcode.vue'
+import PaymentStripe from "@/views/components/PaymentStripe.vue";
+import * as pdfjsLib from 'pdfjs-dist';
+
 
 const errorDialog = ref(false)
 const errorMessage = ref("Error")
+const messageHeader = ref("")
 const pdfDocDom = ref(null)
 const leftContainerDom = ref(null)
+const showConsole = ref(true)
 const userStore = useUserStore()
 const infoStore = useInfoDisplayStore()
-const showRecommendDialog = ref(false)
+
 
 const {lgAndUp} = useDisplay()
 const expandToolBox = ref(false)
@@ -480,39 +468,6 @@ const generatingPdf = ref(false)
 
 const loadingFile = ref(false)
 const fileRef = ref(null)
-const showDragOverlay = ref(false);
-const showOk = ref(false)
-
-function copyRefLink() {
-  try {
-    navigator.clipboard.writeText(getRefLink());
-  } catch (e) {
-
-  }
-  showOk.value = true
-  setTimeout(() => {
-    showOk.value = false
-  }, 1000)
-
-}
-
-function getRefLink() {
-  return "https://fanyidawang.io?ref=" + userStore.currentUser.id
-}
-
-let dragCounter = 0; // 使用计数器防止进入退出事件导致闪烁问题
-
-function onDragEnter() {
-  dragCounter++; // 每次进入增加计数
-  showDragOverlay.value = true; // 显示覆盖层
-}
-
-function onDragLeave() {
-  dragCounter--; // 每次离开减少计数
-  if (dragCounter === 0) {
-    showDragOverlay.value = false; // 仅在拖拽完全离开时隐藏覆盖层
-  }
-}
 
 function onDrop(event) {
   dragCounter = 0; // 放置文件后重置计数器
@@ -537,6 +492,7 @@ function onDrop(event) {
     reset()
     fileRef.value = file;
   } catch (e) {
+    showError("您拖放的文件有问题，问题是：" + e.message)
     console.log(e)
   }
 
@@ -559,35 +515,78 @@ function reset() {
 watch(fileRef, async () => {
   await onFileChange()
 })
+const fileName = ref("")
+const numPages = ref(0)
+const pdfSize = ref("")
+const uploadEstimateTime = ref("")
+let fileHash = ""
+
+const showPDFInfo = ref(false)
 
 async function onFileChange() {
-  if (userStore.currentCredit > 0) {
-    const filePlain = fileRef.value
-    if (filePlain !== null) {
-      try {
-        loadingFile.value = true
-        const fileHash = await calculateFileHash(filePlain)
-        const existInfo = await getFileDetailByFileHash(fileHash)
-        if (!existInfo) {
-
-          await uploadPdfFile(filePlain, userStore.currentUser.id);
-        }
-
-        await infoStore.onFileHashChange(fileHash)
-
-      } catch (e) {
-
-        console.log('失败')
-        console.log(e)
-
-      }
-      loadingFile.value = false
+  if (!fileRef.value) return
+  const filePlain = fileRef.value
+  loadingFile.value = true
+  try {
+    fileHash = await calculateFileHash(filePlain)
+    const exist = await getFileDetailByFileHash(fileHash)
+    if (exist) {
+      await infoStore.onFileHashChange(fileHash)
+    } else {
+      const pdf = await pdfjsLib.getDocument(await filePlain.arrayBuffer()).promise
+      numPages.value = pdf.numPages
+      pdfSize.value = formatFileSize(filePlain)
+      fileName.value = filePlain.name
+      uploadEstimateTime.value = calculateUploadTime(filePlain)
+      showPDFInfo.value = true
     }
-  } else {
-    userStore.showAddCredit = true
+
+
+  } catch (e) {
+    showError(e.message)
   }
+  loadingFile.value = false
 
 }
+
+
+async function submitPDf() {
+  showPDFInfo.value = false
+  loadingFile.value = true
+  try {
+    await uploadPdfFile(fileRef.value, userStore.currentUser.id)
+    await infoStore.onFileHashChange(fileHash)
+    if (numPages.value > 10) {
+      showInfo(
+        "现在正在后台处理中，您可以随时离开本页面，" +
+        "在翻译完成后，我们会向您的注册邮箱发送一份邮件", "文件上传成功")
+    }
+
+  } catch (e) {
+    showError(e.message)
+  }
+  loadingFile.value = false
+}
+
+function validateFile(file) {
+  const fileType = file.type;
+  const fileSize = file.size / (1024 * 1024); // 转换为 MB
+
+  // 验证文件类型
+  if (fileType !== "application/pdf") {
+    showError(`${file.name} 不是一个有效的 PDF 文件！`);
+    return false;
+  }
+
+  // 验证文件大小
+  if (fileSize > 495) {
+    showError(`${file.name} 文件大小超过了 495MB 的限制！`);
+    return false;
+  }
+
+  return true; // 文件通过校验
+}
+
 
 const baseFontSize = 12
 const yMargin = 20
@@ -716,24 +715,6 @@ async function imageDimensions(src) {
 
 }
 
-function validateFile(file) {
-  const fileType = file.type;
-  const fileSize = file.size / (1024 * 1024); // 转换为 MB
-
-  // 验证文件类型
-  if (fileType !== "application/pdf") {
-    showError(`${file.name} 不是一个有效的 PDF 文件！`);
-    return false;
-  }
-
-  // 验证文件大小
-  if (fileSize > 495) {
-    showError(`${file.name} 文件大小超过了 495MB 的限制！`);
-    return false;
-  }
-
-  return true; // 文件通过校验
-}
 
 function getToEnd(node, parents = []) {
   if (node.hasChildNodes()) {
@@ -743,9 +724,15 @@ function getToEnd(node, parents = []) {
   }
 }
 
-function showError(message) {
-  errorDialog.value = true
+function showInfo(message, title) {
+  messageHeader.value = title
   errorMessage.value = message
+  errorDialog.value = true
+
+}
+
+function showError(message) {
+  showInfo(message, "错误！")
 }
 
 function addWrappedText({
@@ -771,6 +758,23 @@ function addWrappedText({
   })
   return cursorY
 }
+
+const showDragOverlay = ref(false);
+
+let dragCounter = 0; // 使用计数器防止进入退出事件导致闪烁问题
+
+function onDragEnter() {
+  dragCounter++; // 每次进入增加计数
+  showDragOverlay.value = true; // 显示覆盖层
+}
+
+function onDragLeave() {
+  dragCounter--; // 每次离开减少计数
+  if (dragCounter === 0) {
+    showDragOverlay.value = false; // 仅在拖拽完全离开时隐藏覆盖层
+  }
+}
+
 
 </script>
 <style>

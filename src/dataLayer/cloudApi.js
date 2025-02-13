@@ -59,6 +59,14 @@ export function getCredit(uid) {
   return hillo.get(cloudUrl + "user-credit/" + uid + "/balance");
 }
 
+export async function generatePaymentUrl(priceId, userId) {
+  return await hillo.jsonPost(cloudUrl + "translation/charge", {
+    priceId, userId
+  })
+
+}
+
+
 export async function translate(text, userId) {
   return await hillo.jsonPost(cloudUrl + "translation/translate", {
     text, userId
