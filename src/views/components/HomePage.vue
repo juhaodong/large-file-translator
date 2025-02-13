@@ -438,8 +438,7 @@
 <script setup>
 import {ref, watch} from 'vue'
 import jsPDF from "jspdf";
-import '@/font.js'
-import '@/han-bold.js'
+
 import LoginForm from "@/views/components/LoginForm.vue";
 import {calculateUploadTime, formatFileSize, Remember, useUserStore} from "@/plugins/supabase.js";
 import {useDisplay} from "vuetify";
@@ -457,7 +456,7 @@ const errorMessage = ref("Error")
 const messageHeader = ref("")
 const pdfDocDom = ref(null)
 const leftContainerDom = ref(null)
-const showConsole = ref(true)
+const showConsole = ref(false)
 const userStore = useUserStore()
 const infoStore = useInfoDisplayStore()
 
@@ -599,6 +598,9 @@ function generatePdf() {
   setTimeout(() => {
     nextTick(async () => {
       try {
+        await import('@/font.js');
+        await import('@/han-bold.js');
+
         const doc = new jsPDF()
         const parser = (new DOMParser())
         doc.setFont('han')
