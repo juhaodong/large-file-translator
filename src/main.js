@@ -14,7 +14,9 @@ import App from './App.vue'
 // Composables
 import {createApp} from 'vue'
 import hillo from "hillo";
+import { injectSpeedInsights } from '@vercel/speed-insights';
 
+injectSpeedInsights();
 const app = createApp(App)
 hillo.use({
   LoadingUtils: {
