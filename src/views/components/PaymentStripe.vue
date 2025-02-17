@@ -94,8 +94,8 @@ const availablePriceIds = ref([
   {id: 'price_1Qs8QJEJRuEVURG7BsmE9npR', price: 1.99, pageCount: 100},
   {
     id: 'price_1Qs8KlEJRuEVURG78euTkGfW',
-    price: 4.99,
-    pageCount: 500
+    price: 2.99,
+    pageCount: 300
   }, {
     id: 'price_1Qs8McEJRuEVURG7xILUIe55',
     price: 9.99,
