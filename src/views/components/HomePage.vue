@@ -541,8 +541,6 @@ async function onFileChange() {
       uploadEstimateTime.value = calculateUploadTime(filePlain)
       showPDFInfo.value = true
     }
-
-
   } catch (e) {
     showError(e.message)
   }
