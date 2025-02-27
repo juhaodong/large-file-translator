@@ -1,23 +1,19 @@
 import {defineStore} from 'pinia'
-import {getCredit, loginUsingOTP, onAuthChange, sendOTPApi} from "@/dataLayer/cloudApi.js";
+import {loginUsingOTP, sendOTPApi} from "@/dataLayer/cloudApi.js";
 import {LocalSettingManager} from "biewangle";
-
+import {v4 as uuidv4} from 'uuid';
 
 export const useUserStore = defineStore('user-store', () => {
-  const currentUser = ref(null)
+
+  if (!Remember.currentUUID) {
+    Remember.currentUUID = uuidv4()
+  }
+  const currentUser = ref({id: Remember.currentUUID})
   const shouldShowLoginForm = ref(false)
   const formReady = ref(false)
   const currentCredit = ref(0)
   const showAddCredit = ref(false)
   const otpError = ref(null)
-
-  onMounted(() => {
-    onAuthChange(({event, token, userInfo}) => {
-      currentUser.value = userInfo
-    })
-  })
-
-
 
 
   function validateEmail(input) {
@@ -90,8 +86,10 @@ export const useUserStore = defineStore('user-store', () => {
 
 export const Remember = LocalSettingManager.config({
   currentFileHash: "",
+  currentUUID: "",
   emailConfirmed: false
 })
+
 
 export function formatFileSize(file) {
   const fileSizeInBytes = file.size; // 从 File 对象获取文件大小（字节）

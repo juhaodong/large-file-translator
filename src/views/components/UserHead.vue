@@ -21,14 +21,13 @@ const {lgAndUp} = useDisplay()
     <v-spacer></v-spacer>
     <v-btn
       v-if="userStore.currentUser"
-      @click="userStore.showAddCredit=true"
       flat
       size="large"
       rounded="lg"
       variant="outlined"
       prepend-icon="mdi-wallet"
     >
-      {{ userStore.currentCredit.toFixed(2) }}
+      Free
     </v-btn>
 
   </v-card>
