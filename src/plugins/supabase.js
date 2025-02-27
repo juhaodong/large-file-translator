@@ -13,41 +13,12 @@ export const useUserStore = defineStore('user-store', () => {
 
   onMounted(() => {
     onAuthChange(({event, token, userInfo}) => {
-      console.log(event, token, userInfo)
       currentUser.value = userInfo
-      shouldShowLoginForm.value = token === null
-      refreshUserInfo()
     })
   })
 
 
-  async function refreshUserInfo() {
-    if (currentUser.value) {
-      refreshCredit()
-      refreshProjects()
-    }
-  }
 
-  async function refreshProjects() {
-    if (currentUser.value) {
-    }
-  }
-
-  async function refreshCredit() {
-
-    if (currentUser.value) {
-      const old = currentCredit.value
-      currentCredit.value = await getCredit(currentUser.value.id)
-      if (old !== currentCredit.value) {
-        showAddCredit.value = false
-      }
-    }
-
-  }
-
-  onMounted(() => {
-    setInterval(refreshCredit, 30 * 1000)
-  })
 
   function validateEmail(input) {
     return String(input)
